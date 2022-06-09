@@ -29,12 +29,13 @@ class MetacriticWebscraperTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        print('setupClass')
-    
+        print('setUpClass')
+        
     @classmethod
     def tearDownClass(cls):
         print('teardownClass')
-
+        
+        
 
     def setUp(self):
         self.scraper = MetaCriticScraper("https://www.metacritic.com/")
@@ -101,7 +102,7 @@ class MetacriticWebscraperTests(unittest.TestCase):
     def test_collect_page_links(self):
         test_page = "https://www.metacritic.com/browse/albums/genre/date/electronic"
         self.scraper.driver.get(test_page)
-        test_input = self.scraper.extract_the_page_links('//a[@class="title"]', 'href')
+        test_input = self.scraper.extract_page_links('//a[@class="title"]', 'href')
 
         self.assertIsInstance(test_input, list)
         self.assertEqual(len(test_input), 100)
@@ -120,7 +121,7 @@ class MetacriticWebscraperTests(unittest.TestCase):
         #         home_page = self.scraper.land_first_page(test_url)  
         #         mock_first_page.assert_called_with(home_page)
 
-    @unittest.skip
+   
     def test_accept_cookies(self):
         self.assertTrue(self.scraper.accept_cookies('//button[@id="onetrust-accept-btn-handler"]'))
         
@@ -146,6 +147,7 @@ class MetacriticWebscraperTests(unittest.TestCase):
 
     def tearDown(self):
         self.scraper.driver.quit()
+
     if __name__ == "__main__":
         # unittest.main(argv=[''], verbosity=2, exit=False)
         unittest.main()
