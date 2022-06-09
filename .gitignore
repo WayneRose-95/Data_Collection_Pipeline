@@ -127,3 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# jupyter notebooks
+*.ipynb
+
+# ignore logs files 
+/logs
+
+# .txt files 
+
+*.txt
