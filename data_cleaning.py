@@ -1,6 +1,8 @@
 import numpy as np 
 import pandas as pd 
 import os 
+import yaml
+from sqlalchemy import create_engine 
 
 # Data Cleaning Plan 
 
@@ -12,10 +14,27 @@ import os
 
 '''
 
-class DataCleaning: 
+class DataCleaning:
+    '''
+    A class which is designed to convert .json data into a pandas dataframe, 
+    and clean its columns 
+    
+    ''' 
 
     def __init__(self, file_pathway, encoding=None):
-        self.data = self.create_dataframe(file_pathway) 
+        self.data = self.create_dataframe(file_pathway)
+        with open('config/RDS_details_config.yaml') as file:
+            creds = yaml.safe_load(file)
+            DATABASE_TYPE = creds['DATABASE_TYPE']
+            DBAPI = creds['DBAPI']
+            ENDPOINT = creds['ENDPOINT']
+            USER = creds['USER']
+            PASSWORD = creds['PASSWORD']
+            DATABASE = creds['DATABASE']
+            PORT = creds['PORT']
+        
+        self.engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{ENDPOINT}:{PORT}/{DATABASE}")
+        self.engine.connect() 
 
     
     def create_dataframe(self, file_pathway, encoding=None):
@@ -57,9 +76,11 @@ class DataCleaning:
         # Lastly, for each column in the description column, strip the word 'Summary:' off of each of the records. 
         raw_data.Description = raw_data.Description.str.strip('Summary:')
         raw_data.head()
-        
+        raw_data.to_sql('Fighting_Games', con=self.engine, if_exists='replace')      
         # return the raw_data as a cleaned dataframe
         return raw_data
+
+      
 
 if __name__ == "__main__":
     file_path = os.getcwd()

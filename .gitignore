@@ -137,3 +137,6 @@ dmypy.json
 # .txt files 
 
 *.txt
+
+# RDS details config file 
+/config/RDS_details_config.yaml
