@@ -54,27 +54,27 @@ class DataCleaning:
         # Convert the following columns into string datatypes 
         raw_data = raw_data.astype(
             {
-            'Title': 'string', 
-            'Link_to_Page': 'string', 
-            'Platform': 'string',
-            'Release_Date': 'string',
-            'Developer': 'string',  
-            'Description': 'string'}
+            'title': 'string', 
+            'link_to_page': 'string', 
+            'platform': 'string',
+            'release_date': 'string',
+            'developer': 'string',  
+            'description': 'string'}
         )
         
         # For all values inside the Title column, apply the string method .title() to capitalise every first letter. 
-        raw_data.Title = raw_data.Title.str.title()
+        raw_data.title = raw_data.title.str.title()
 
-        # Change the column: Release_Date to a datetime object and change its formatting 
-        raw_data['Release_Date'] = pd.to_datetime(raw_data['Release_Date'].astype(str), format='%b %d, %Y')
-        raw_data['Release_Date'] = raw_data['Release_Date'].dt.strftime('%m/%d/%Y')
+        # Change the column: release_date to a datetime object and change its formatting 
+        raw_data['release_date'] = pd.to_datetime(raw_data['release_date'].astype(str), format='%b %d, %Y')
+        raw_data['release_date'] = raw_data['release_date'].dt.strftime('%m/%d/%Y')
 
-        # Next, change the columns: MetaCritic_Score and User_Score to an integer and a float respectively. 
-        raw_data.MetaCritic_Score = pd.to_numeric(raw_data.MetaCritic_Score, errors='coerce').astype('Int64')
-        raw_data.User_Score = pd.to_numeric(raw_data.User_Score, errors='coerce').astype('float64')
+        # Next, change the columns: metacritic_score and user_score to an integer and a float respectively. 
+        raw_data.metacritic_score = pd.to_numeric(raw_data.metacritic_score, errors='coerce').astype('Int64')
+        raw_data.user_score = pd.to_numeric(raw_data.user_score, errors='coerce').astype('float64')
 
         # Lastly, for each column in the description column, strip the word 'Summary:' off of each of the records. 
-        raw_data.Description = raw_data.Description.str.strip('Summary:')
+        raw_data.description = raw_data.description.str.strip('Summary:')
         raw_data.head()
         raw_data.to_sql('Fighting_Games', con=self.engine, if_exists='replace')      
         # return the raw_data as a cleaned dataframe
