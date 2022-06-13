@@ -56,8 +56,7 @@ class MetacriticWebscraperTests(unittest.TestCase):
         # Mixed game root = "https://www.metacritic.com/game/pc/white-shadows
         test_urls = ["https://www.metacritic.com/game/gamecube/charlies-angels",
                     "https://www.metacritic.com/game/xbox/halo-combat-evolved",
-                    "https://www.metacritic.com/game/pc/white-shadows", 
-                    "https://www.metacritic.com/music/nightroamer/sarah-shook-the-disarmers"]
+                    "https://www.metacritic.com/game/pc/white-shadows"]
 
         # Iterate through each url in the list 
         # to see if it generates a dictionary output          

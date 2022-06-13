@@ -1,0 +1,7 @@
+DATABASE_TYPE: # Your database here
+DBAPI: # Your database API here 
+ENDPOINT: # Your AWS Endpoint or LocalHost here 
+USER: # Your database master username here 
+PASSWORD: # Database password here 
+DATABASE: # Your database name here
+PORT: # Your port number for your database here
