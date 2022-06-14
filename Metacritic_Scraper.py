@@ -63,15 +63,15 @@ class MetaCriticScraper(Scraper):
 
         # TODO: Adjust the keys of the self.xpaths_dict to take the headings from the pages.
         self.xpaths_dict = {
-            "UUID": "",
-            "Title": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1',
-            "Link_to_Page": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a',
-            "Platform": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span',
-            "Release_Date": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
-            "MetaCritic_Score": '//a[@class="metascore_anchor"]/div',
-            "User_Score": '//div[@class="userscore_wrap feature_userscore"]/a/div',
-            "Developer": '//li[@class="summary_detail developer"]/span[2]/a',
-            "Description": './/li[@class="summary_detail product_summary"]',
+            "uuid": "",
+            "title": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1',
+            "link_to_page": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a',
+            "platform": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/span',
+            "release_date": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[2]/span[2]',
+            "metacritic_score": '//a[@class="metascore_anchor"]/div',
+            "user_score": '//div[@class="userscore_wrap feature_userscore"]/a/div',
+            "developer": '//li[@class="summary_detail developer"]/span[2]/a',
+            "description": './/li[@class="summary_detail product_summary"]',
         }
 
     def accept_cookies(self, cookies_button_xpath: str):
@@ -139,7 +139,7 @@ class MetaCriticScraper(Scraper):
 
             try:
                 # if the key in the dictionary == description. Expand the description text on the page.
-                if key == "Description":
+                if key == "description":
                     # Look inside the container
                     web_element = self.driver.find_element(
                         By.XPATH, '//div[@class="summary_wrap"]'
@@ -165,10 +165,10 @@ class MetaCriticScraper(Scraper):
 
                 else:
                     # Further logic for special cases: UUID and the Link_to_Page.
-                    if key == "UUID":
+                    if key == "uuid":
                         page_information_dict[key] = str(uuid.uuid4())
 
-                    elif key == "Link_to_Page":
+                    elif key == "link_to_page":
                         web_element = self.driver.find_element(
                             By.XPATH, xpath
                         ).get_attribute("href")
