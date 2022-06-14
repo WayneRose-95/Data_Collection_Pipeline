@@ -1,8 +1,8 @@
 import numpy as np 
 import pandas as pd 
 import os 
-import yaml
-from sqlalchemy import create_engine 
+from sqlalchemy import create_engine
+import yaml 
 
 # Data Cleaning Plan 
 
@@ -14,15 +14,10 @@ from sqlalchemy import create_engine
 
 '''
 
-class DataCleaning:
-    '''
-    A class which is designed to convert .json data into a pandas dataframe, 
-    and clean its columns 
-    
-    ''' 
+class DataCleaning: 
 
     def __init__(self, file_pathway, encoding=None):
-        self.data = self.create_dataframe(file_pathway)
+        self.data = self.create_dataframe(file_pathway) 
         with open('config/RDS_details_config.yaml') as file:
             creds = yaml.safe_load(file)
             DATABASE_TYPE = creds['DATABASE_TYPE']
@@ -35,13 +30,12 @@ class DataCleaning:
         
         self.engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{ENDPOINT}:{PORT}/{DATABASE}")
         self.engine.connect() 
-
     
     def create_dataframe(self, file_pathway, encoding=None):
         raw_data = pd.read_json(file_pathway, encoding='utf-8-sig')
         return raw_data
     
-    def clean_dataframe(self, file_pathway, table_name):
+    def clean_dataframe(self, file_pathway):
         # Create the dataframe 
         raw_data = self.create_dataframe(file_pathway)
 
@@ -55,14 +49,14 @@ class DataCleaning:
         raw_data = raw_data.astype(
             {
             'title': 'string', 
-            'link_to_page': 'string', 
+            'tink_to_page': 'string', 
             'platform': 'string',
             'release_date': 'string',
             'developer': 'string',  
             'description': 'string'}
         )
         
-        # For all values inside the Title column, apply the string method .title() to capitalise every first letter. 
+        # For all values inside the title column, apply the string method .title() to capitalise every first letter. 
         raw_data.title = raw_data.title.str.title()
 
         # Change the column: release_date to a datetime object and change its formatting 
@@ -76,13 +70,11 @@ class DataCleaning:
         # Lastly, for each column in the description column, strip the word 'Summary:' off of each of the records. 
         raw_data.description = raw_data.description.str.strip('Summary:')
         raw_data.head()
-        raw_data.to_sql(table_name, con=self.engine, if_exists='replace')      
+        
         # return the raw_data as a cleaned dataframe
         return raw_data
-
-      
 
 if __name__ == "__main__":
     file_path = os.getcwd()
     new_data = DataCleaning(file_path + '\\json-files\\fighting-games-details.json', encoding= 'utf-8-sig' )
-    new_data.clean_dataframe(file_path + '\\json-files\\fighting-games-details.json', 'Fighting_Games')
+    new_data.clean_dataframe(file_path + '\\json-files\\fighting-games-details.json')
