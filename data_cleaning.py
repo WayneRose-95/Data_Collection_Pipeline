@@ -85,4 +85,4 @@ class DataCleaning:
 if __name__ == "__main__":
     file_path = os.getcwd()
     new_data = DataCleaning(file_path + '\\json-files\\fighting-games-details.json', encoding= 'utf-8-sig' )
-    new_data.clean_dataframe(file_path + '\\json-files\\fighting-games-details.json')
+    new_data.clean_dataframe(file_path + '\\json-files\\fighting-games-details.json', 'Fighting_Games')
