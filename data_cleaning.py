@@ -41,7 +41,7 @@ class DataCleaning:
         raw_data = pd.read_json(file_pathway, encoding='utf-8-sig')
         return raw_data
     
-    def clean_dataframe(self, file_pathway):
+    def clean_dataframe(self, file_pathway, table_name):
         # Create the dataframe 
         raw_data = self.create_dataframe(file_pathway)
 
@@ -76,7 +76,7 @@ class DataCleaning:
         # Lastly, for each column in the description column, strip the word 'Summary:' off of each of the records. 
         raw_data.description = raw_data.description.str.strip('Summary:')
         raw_data.head()
-        raw_data.to_sql('Fighting_Games', con=self.engine, if_exists='replace')      
+        raw_data.to_sql(table_name, con=self.engine, if_exists='replace')      
         # return the raw_data as a cleaned dataframe
         return raw_data
 
