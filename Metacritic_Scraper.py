@@ -90,8 +90,7 @@ class MetaCriticScraper(Scraper):
             "description": './/li[@class="summary_detail product_summary"]',
         }
 
-        df = pd.read_sql("Fighting_Games", self.engine)
-        self.href_list_scraped = list(df['link_to_page'])
+       
 
 
     def accept_cookies(self, cookies_button_xpath: str):
@@ -302,31 +301,48 @@ class MetaCriticScraper(Scraper):
         self.driver.get(genre_list[2])
 
         # Process the links and store them inside a .txt file to iterate through.
-        self.process_page_links(file_name)
+        # self.process_page_links(file_name)
 
         # Open the file name and iterate through the links inside the file
         with open(f"{file_name}.txt") as file:
 
             all_data_list = []
                       
-            for line in file:
-                
+            for line in file.read().splitlines():
+                # print(line)
+                # print(type(line))
+                list_of_records = self.record_check("Fighting_Games", "link_to_page")
+
+                for record in list_of_records:
+                    # print(record)
+                    # print(line)
+                    if line == str(record):
+                        print('Already scraped')
+                        logger.debug(f'{line} has already been scraped')
+                        continue
                 try:
+                    
                     self.driver.implicitly_wait(3)
                     self.driver.get(str(line))
                     all_data_list.append(self.get_information_from_page())
                       
                     
                 except TimeoutException:
-                    logger.warning("Timeoutexception on this page. Retrying.")
-                    self.driver.implicitly_wait(3)
-                    self.driver.refresh()
-                    all_data_list.append(self.get_information_from_page())
+                    try:
+                        if line in list_of_records:
+                            print('Already scraped')
+                            logger.debug(f'{line} has already been scraped')
+                            continue
+                    except:
+                        logger.warning("Timeoutexception on this page. Retrying.")
+                        self.driver.implicitly_wait(3)
+                        self.driver.refresh()
+                        all_data_list.append(self.get_information_from_page())
 
-                logger.info(all_data_list)
-                self.save_json(all_data_list, "fighting-games")
-                logger.info("Scrape complete! Exiting...")
-                self.driver.quit()
+            logger.info(all_data_list)
+            self.save_json(all_data_list, "fighting-games")
+            logger.info("Scrape complete! Exiting...")
+            self.driver.quit()
 
         
     
@@ -356,26 +372,27 @@ class MetaCriticScraper(Scraper):
 
             # Cast the pandas dataframe to a list to be compared. 
             href_list = result[column_name].tolist()
-            print(href_list)
+           
         # For each entry inside the list 
-        # for entry in all_data_list:
+        for entry in href_list:
 
-        #     # convert it to a pandas dataframe 
-        #     rds_entry = pd.DataFrame([entry])
-        #     print(rds_entry)
-        #     # If the entry is not in the list of items in the table name 
+            # convert it to a pandas dataframe 
+            rds_entry = pd.DataFrame([entry])
+            
+            # If the entry is not in the list of items in the table name 
 
-        #     if entry[column_name] in href_list:
-        #         # Take the dataframe and append it to the RDS 
-        #         logger.warning('This record already exists inside the database')
+            if entry in href_list:
+                # Take the dataframe and append it to the RDS 
+                logger.warning('This record already exists inside the database')
 
-        #         return False
                 
-        #     # But if it does not exist, state that the record has already been scraped, then continue the process
-        #     else:
-        #         rds_entry.to_sql(table_name, self.engine, if_exists='append')
-        #         return True
+            # But if it does not exist, state that the record has already been scraped, then continue the process
+            else:
+                rds_entry.to_sql(table_name, self.engine, if_exists='append')
+            
         # In either case, return the href_list to check against the href_list in the database
+        print(type(href_list))
+       
         return href_list
 
                        
