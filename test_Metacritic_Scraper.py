@@ -2,6 +2,7 @@ from typing import Type
 import unittest
 from unittest import mock
 from Metacritic_Scraper import MetaCriticScraper
+from data_cleaning import DataCleaning
 from unittest.mock import patch 
 from selenium.common.exceptions import WebDriverException
 from selenium.common.exceptions import InvalidArgumentException
@@ -41,6 +42,7 @@ class MetacriticWebscraperTests(unittest.TestCase):
         self.scraper = MetaCriticScraper("https://www.metacritic.com/")
         time.sleep(5)
     
+    @unittest.skip
     def test_get_information_from_page(self):
         '''
         Unittest to ensure that information is being collected 
@@ -50,6 +52,7 @@ class MetacriticWebscraperTests(unittest.TestCase):
         Pages within the Games section of the website
         Pages with an 'expand' button under their descriptions 
         Pages with varying Metascores: good, average and bad
+
         '''
         # Good game root = "https://www.metacritic.com/game/xbox/halo-combat-evolved"
         # Bad game root = "https://www.metacritic.com/game/gamecube/charlies-angels"
@@ -120,7 +123,7 @@ class MetacriticWebscraperTests(unittest.TestCase):
         #         home_page = self.scraper.land_first_page(test_url)  
         #         mock_first_page.assert_called_with(home_page)
 
-   
+    @unittest.skip
     def test_accept_cookies(self):
         self.assertTrue(self.scraper.accept_cookies('//button[@id="onetrust-accept-btn-handler"]'))
         
@@ -142,7 +145,31 @@ class MetacriticWebscraperTests(unittest.TestCase):
             
             print(test_json)
             self.assertTrue(test_json, True)
-    
+
+    def test_record_check(self):
+
+        # Use a sample record like so 
+        sample_record = [
+    {
+        "uuid": "c505f129-8923-4f4e-be95-976c2fa3b2c2",
+        "title": "YATAGARASU: ATTACK ON CATACLYSM",
+        "link_to_page": "https://www.metacritic.com/game/pc/yatagarasu-attack-on-cataclysm",
+        "platform": "PC",
+        "release_date": "Jul 7, 2015",
+        "metacritic_score": "tbd",
+        "user_score": "tbd",
+        "developer": "Null",
+        "description": "Null"
+    }]
+        # Check this record against the database
+        sample_record_check = self.scraper.record_check(
+                                sample_record,
+                                "Fighting_Games",
+                                "link_to_page",   
+                            )
+
+        # If the record is present within the database, the test will return False
+        self.assertFalse(sample_record_check)
 
     def tearDown(self):
         self.scraper.driver.quit()

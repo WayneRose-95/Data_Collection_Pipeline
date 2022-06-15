@@ -1,14 +1,19 @@
 import time
 import os
+import yaml 
 from numpy import number
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from urllib3 import Timeout
 from ScraperClass import Scraper
 from data_cleaning import DataCleaning
+from data_cleaning import DataCleaning
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from tqdm import tqdm
+from sqlalchemy import create_engine
+import sqlalchemy
+import pandas as pd 
 
 # from alive_progress import alive_bar
 import uuid
@@ -51,14 +56,25 @@ class MetaCriticScraper(Scraper):
 
     def __init__(self, url):
         super().__init__()
-
+        with open('config/RDS_details_config.yaml') as file:
+            creds = yaml.safe_load(file)
+            DATABASE_TYPE = creds['DATABASE_TYPE']
+            DBAPI = creds['DBAPI']
+            ENDPOINT = creds['ENDPOINT']
+            USER = creds['USER']
+            PASSWORD = creds['PASSWORD']
+            DATABASE = creds['DATABASE']
+            PORT = creds['PORT']
+        
+        self.engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{ENDPOINT}:{PORT}/{DATABASE}")
+        self.engine.connect() 
         try:
             self.driver.set_page_load_timeout(30)
             self.land_first_page(url)
         except TimeoutException as ex:
             print("Exception has been thrown. " + str(ex))
             self.driver.quit()
-
+        
         self.page_counter = 0
 
         # TODO: Adjust the keys of the self.xpaths_dict to take the headings from the pages.
@@ -241,27 +257,88 @@ class MetaCriticScraper(Scraper):
         with open(f"{file_name}.txt") as file:
 
             all_data_list = []
+            text_file_list = []
+            for index, line in enumerate(file):
+                text_file_list.append(line.strip()) 
 
+            # href_scraped_list = self.record_check(text_file_list, "Fighting_Games","link_to_page")
+          
             for line in file:
                 try:
                     self.driver.implicitly_wait(3)
                     self.driver.get(str(line))
 
-                    all_data_list.append(self.get_information_from_page())
+                    new_record = all_data_list.append(self.get_information_from_page())
+                    record_check = self.record_check(all_data_list, "Fighting_Games", "link_to_page")
+                    if new_record['link_to_page'] in record_check:
+                        logger.warning('This page has already been scraped')
+                        continue 
 
                 except TimeoutException:
                     logger.warning("Timeoutexception on this page. Retrying.")
                     self.driver.implicitly_wait(3)
                     self.driver.refresh()
 
-                    all_data_list.append(self.get_information_from_page())
+                new_record = all_data_list.append(self.get_information_from_page())
 
             logger.info(all_data_list)
+            if all_data_list == []:
+                del all_data_list
             self.save_json(all_data_list, "fighting-games")
             logger.info("Scrape complete! Exiting...")
             self.driver.quit()
 
-        return all_data_list
+        
+    
+    
+    def record_check(self, all_data_list, table_name, column_name):
+        '''
+        Staticmethod to check if a record already exists inside the RDS. 
+
+        How it will be checked: 
+        Query the links to the pages of the website. 
+        Store these inside a list 
+        Everytime a page is loaded, check whether the link exists within the list. 
+        If it does exist, skip scraping the page. 
+        If it does not exist, scrape the page, and append it to the all_data_list. 
+        
+        '''
+
+        
+        # Inspect the engine of the RDS database. Find the table_name if it exists 
+        if sqlalchemy.inspect(self.engine).has_table(table_name):
+            
+            # If it exists, run a query to select the specified column 
+            sql = sqlalchemy.text(f'SELECT {column_name} FROM "{table_name}"')
+
+            # Next, read the sql query into a pandas dataframe
+            result = pd.read_sql_query(sql, self.engine)
+
+            # Cast the pandas dataframe to a list to be compared. 
+            href_list = result[f'{column_name}'].tolist()
+            print(href_list)
+        # For each entry inside the list 
+        for entry in all_data_list:
+
+            # convert it to a pandas dataframe 
+            rds_entry = pd.DataFrame([entry])
+            print(rds_entry)
+            # If the entry is not in the list of items in the table name 
+
+            if entry[column_name] in href_list:
+                # Take the dataframe and append it to the RDS 
+                logger.warning('This record already exists inside the database')
+
+                return False
+                
+            # But if it does not exist, state that the record has already been scraped, then continue the process
+            else:
+                rds_entry.to_sql(table_name, self.engine, if_exists='append')
+                return True
+        # In either case, return the href_list to check against the href_list in the database
+        return href_list
+
+                       
 
     def create_dataframe(self, all_data_list):
         new_dataframe = DataCleaning(all_data_list, encoding="utf-8-sig")
