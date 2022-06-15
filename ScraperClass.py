@@ -84,12 +84,32 @@ class Scraper:
         )  #
 
     def land_first_page(self, page_url: str):
+        '''
+        Method to accquire the first page of the website 
+
+        parameters: 
+        page_url : str 
+        A link which represents the webpage
+
+        '''
         home_page = self.driver.get(page_url)
         logger.debug("Landed first page")
         return home_page
 
     def accept_cookies(self, cookies_button_xpath: str, iframe: Optional[str] = None):
 
+        '''
+        Method to click the accept_cookies button on the webpage 
+
+        Parameters: 
+        cookies_button_xpath : str 
+        A string which represents the web_element for the accept_cookies button
+
+        iframe: Optional[str]:
+        An optional parameter which can be called in case the button is within 
+        an iframe. 
+
+        '''
         sleep(4)
         try:
             if iframe:  # To find if the accept cookies button is within a frame
@@ -117,6 +137,19 @@ class Scraper:
 
     def look_for_search_bar(self, search_bar_xpath: str):
 
+        '''
+        Method to look for a search bar on the webpage 
+
+        Parameters: 
+
+        search_bar_xpath : str 
+        A string which represents the web-element for the search bar on the webpage
+
+        Returns: 
+        search_bar_element: 
+        A web-element representing the search bar on the webpage 
+
+        '''
         try:
             search_bar_element = WebDriverWait(self.driver, 0.5).until(
                 EC.presence_of_element_located((By.XPATH, search_bar_xpath))
@@ -130,7 +163,22 @@ class Scraper:
         return search_bar_element
 
     def send_keys_to_search_bar(self, search_bar_xpath: str, text: str):
+        '''
+        Method to look for a search bar on the webpage 
 
+        Parameters: 
+
+        search_bar_xpath : str 
+        A string which represents the web-element for the search bar on the webpage
+
+        text : str 
+        The text which the user wants to put into the search bar i.e. "text" 
+
+        Returns: 
+        search_bar_element: 
+        A web-element representing the search bar on the webpage 
+
+        '''
         search_bar_element = self.look_for_search_bar(search_bar_xpath)
 
         if search_bar_element:
@@ -220,6 +268,19 @@ class Scraper:
 
     def apply_filter_list(self, filter_container_xpath: str, filter_button=None):
 
+        '''
+        Method to work with the filter lists on a webpage. 
+
+        Parameters: 
+
+        filter_container_xpath : str 
+        
+        A string which represents the web-element for the filter container on the page
+
+        filter_button = None 
+        A string which represents the web-element for the filter button on the page
+
+        '''
         if filter_button:
             filter_button = self.driver.find_element(By.XPATH, filter_button)
             filter_button.click()
@@ -337,7 +398,22 @@ class Scraper:
         return image_dict
 
     def save_json(self, all_products_dictionary: list or dict, sub_category_name: str):
+        '''
+        Method to save the products into a .json format 
 
+        Parameters: 
+        all_products_dictionary : list or dict 
+        A dictionary or list representing the data to be converted 
+
+        sub_category_name : str 
+        The name of the .json file the user wants to give to the .json file. 
+
+        Returns: 
+        True : Bool 
+        If the .json file has been created. 
+
+        
+        '''
         file_to_convert = all_products_dictionary
         file_name = f"{sub_category_name}-details.json"
         # Logic for uploading to cloud servers.
