@@ -76,8 +76,8 @@ class MetaCriticScraper(Scraper):
             self.driver.quit()
         
         self.page_counter = 0
-
-        # TODO: Adjust the keys of the self.xpaths_dict to take the headings from the pages.
+        
+        # Dictionary of xpaths representing web_elements on the page. 
         self.xpaths_dict = {
             "uuid": "",
             "title": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1',
@@ -90,12 +90,36 @@ class MetaCriticScraper(Scraper):
             "description": './/li[@class="summary_detail product_summary"]',
         }
 
+        df = pd.read_sql("Fighting_Games", self.engine)
+        self.href_list_scraped = list(df['link_to_page'])
+
+
     def accept_cookies(self, cookies_button_xpath: str):
+        '''
+        Method to click the accept cookies on the webpage 
+
+        parameters: 
+        cookies_button_xpath : str
+        A string which represents the web element for the accept_cookies button 
+
+        returns: 
+        bool: True if the button exists 
+
+        '''
         return super().accept_cookies(cookies_button_xpath)
 
     def choose_category(self, category_selection: str = "game" or "music"):
 
         """
+        Method to choose a category on the webpage
+
+        Parameters: 
+        category_selection : str 
+        A string representing the selection of the choice i.e. game or music
+
+        returns: 
+        category_selection : str 
+
         Currently works for games and music pages
         """
 
@@ -114,7 +138,17 @@ class MetaCriticScraper(Scraper):
 
     def choose_genre(self):
 
-        """
+        """ 
+        Method to choose the genre on the webpage
+
+        Parameters: 
+        None 
+
+        Returns: 
+        list_of_genre_links 
+
+        Returns a list of links to the genres on the page. 
+
         Currently works for games, tv and music
         """
         genre_container = self.driver.find_elements(
@@ -131,26 +165,18 @@ class MetaCriticScraper(Scraper):
         logger.info(f"Here are the list of genres: {list_of_genres}")
         return list_of_genre_links
 
-    def click_next_page(self, page):
-
-        next_page_element = self.driver.find_element(
-            By.XPATH,
-            f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*',
-        )
-        next_page_url = next_page_element.get_attribute("href")
-
-        self.driver.get(str(next_page_url))
-        logger.debug(page)
-        logger.debug(type(page))
-        # print(next_page_url)
-        logger.info("navigating to next page")
-
-        return next_page_url
 
     def get_information_from_page(self):
+        '''
+        Method to collect the information from the webpage 
 
+        Returns: 
+        A dictionary containing key, value pairs for the information 
+        extracted via the self.xpaths_dict. 
+        '''
         page_information_dict = {}
-        # TODO: This could be a staticmethod?
+        # Use tuple unpacking to iterate through the keys and values of the 
+        # xpaths_dict 
         for key, xpath in self.xpaths_dict.items():
 
             try:
@@ -205,6 +231,17 @@ class MetaCriticScraper(Scraper):
 
     def process_page_links(self, file_name: str):
 
+        '''
+        Method to process the page links and store them inside a text_file
+
+        Parameters: 
+        file_name : str 
+
+        The name of the file 
+
+        Returns:
+        None 
+        '''
         list_of_all_pages_to_visit = []
 
         page_value = self.collect_number_of_pages(
@@ -244,54 +281,57 @@ class MetaCriticScraper(Scraper):
                 except TimeoutException:
                     if range_final:
                         break
-                # TODO: During this loop, the outputs of the links are stored inside a text file 
+                # During this loop, the outputs of the links are stored inside a text file 
                 # to be called when running the sample_scraper method
 
     def sample_scraper(self, file_name: str):
+
+        '''
+        A method which combines all of the previous methods to 
+        scrape information from the webpage 
+
+        Parameters: 
+        file_name : str 
+        The name of the file 
+        '''
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content
+
+        # Create a list of hrefs to scrape 
         genre_list = self.choose_genre()
+        # Get the 2nd index of the genre_list i.e. Fighting Games in this case. 
         self.driver.get(genre_list[2])
 
+        # Process the links and store them inside a .txt file to iterate through.
         self.process_page_links(file_name)
 
+        # Open the file name and iterate through the links inside the file
         with open(f"{file_name}.txt") as file:
 
             all_data_list = []
-            text_file_list = []
-            for index, line in enumerate(file):
-                text_file_list.append(line.strip()) 
-
-            # href_scraped_list = self.record_check(text_file_list, "Fighting_Games","link_to_page")
-          
+                      
             for line in file:
+                
                 try:
                     self.driver.implicitly_wait(3)
                     self.driver.get(str(line))
-
-                    new_record = all_data_list.append(self.get_information_from_page())
-                    record_check = self.record_check(all_data_list, "Fighting_Games", "link_to_page")
-                    if new_record['link_to_page'] in record_check:
-                        logger.warning('This page has already been scraped')
-                        continue 
-
+                    all_data_list.append(self.get_information_from_page())
+                      
+                    
                 except TimeoutException:
                     logger.warning("Timeoutexception on this page. Retrying.")
                     self.driver.implicitly_wait(3)
                     self.driver.refresh()
+                    all_data_list.append(self.get_information_from_page())
 
-                new_record = all_data_list.append(self.get_information_from_page())
-
-            logger.info(all_data_list)
-            if all_data_list == []:
-                del all_data_list
-            self.save_json(all_data_list, "fighting-games")
-            logger.info("Scrape complete! Exiting...")
-            self.driver.quit()
+                logger.info(all_data_list)
+                self.save_json(all_data_list, "fighting-games")
+                logger.info("Scrape complete! Exiting...")
+                self.driver.quit()
 
         
     
     
-    def record_check(self, all_data_list, table_name, column_name):
+    def record_check(self, table_name, column_name):
         '''
         Staticmethod to check if a record already exists inside the RDS. 
 
@@ -315,35 +355,30 @@ class MetaCriticScraper(Scraper):
             result = pd.read_sql_query(sql, self.engine)
 
             # Cast the pandas dataframe to a list to be compared. 
-            href_list = result[f'{column_name}'].tolist()
+            href_list = result[column_name].tolist()
             print(href_list)
         # For each entry inside the list 
-        for entry in all_data_list:
+        # for entry in all_data_list:
 
-            # convert it to a pandas dataframe 
-            rds_entry = pd.DataFrame([entry])
-            print(rds_entry)
-            # If the entry is not in the list of items in the table name 
+        #     # convert it to a pandas dataframe 
+        #     rds_entry = pd.DataFrame([entry])
+        #     print(rds_entry)
+        #     # If the entry is not in the list of items in the table name 
 
-            if entry[column_name] in href_list:
-                # Take the dataframe and append it to the RDS 
-                logger.warning('This record already exists inside the database')
+        #     if entry[column_name] in href_list:
+        #         # Take the dataframe and append it to the RDS 
+        #         logger.warning('This record already exists inside the database')
 
-                return False
+        #         return False
                 
-            # But if it does not exist, state that the record has already been scraped, then continue the process
-            else:
-                rds_entry.to_sql(table_name, self.engine, if_exists='append')
-                return True
+        #     # But if it does not exist, state that the record has already been scraped, then continue the process
+        #     else:
+        #         rds_entry.to_sql(table_name, self.engine, if_exists='append')
+        #         return True
         # In either case, return the href_list to check against the href_list in the database
         return href_list
 
                        
-
-    def create_dataframe(self, all_data_list):
-        new_dataframe = DataCleaning(all_data_list, encoding="utf-8-sig")
-        new_dataframe.clean_dataframe(all_data_list)
-
 
 if __name__ == "__main__":
     new_scraper = MetaCriticScraper("https://www.metacritic.com")
