@@ -5,11 +5,9 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
-
 # from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
 # from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.service import Service
 from urllib3.exceptions import SSLError
@@ -17,18 +15,16 @@ from typing import Optional
 from time import sleep
 import urllib.request
 import boto3
-
 # import tempfile
 import os
-
-# import shutil
 import uuid
 import json
 import itertools
-
-# import requests
-# import certifi
+import requests
+import certifi
 import logging
+import ssl 
+import mimetypes 
 
 
 #%%
@@ -310,30 +306,49 @@ class Scraper:
             print(filter_container_list)
             return filter_container_list
 
-    def download_image(self, image_xpath, sub_category_name: str):
+    def download_image(self, image_xpath : str, game_category: str, game_name: str):
 
-        """
-        Method to download an image and save it inside a directory
+        '''
+        Method to download the image from the webpage 
 
-        parameters:
+        Parameters: 
+        image_xpath : str
+        A string which represents the web element of the image on the webpage 
+        e.g. 
+        '//*[@id="product-gallery"]/div[2]/div[2]/div[2]/img'
 
-        image_xpath:
-        The xpath relating to the image(s)
-        sub_category_name: The name of the image(s)
-        """
-        image_category = sub_category_name
-        image_name = f"{sub_category_name}-image"
-        src_list = self.extract_the_page_links(image_xpath, "src")
+        game_category : str 
+        The category which the game is in i.e. Action, Adventure, RPG etc. 
+
+        Game_Name : str 
+        A string representing the name of the game being downloaded
+        '''
+        image_category = game_category
+        image_name = f"{game_name}-{game_category}-image"
+        src_list = self.extract_page_links(image_xpath, "src")
         # //*[@id="product-gallery"]/div[2]/div[2]/div[2]/img
 
         try:
             image_path = f"images/{image_category}"
+            sslcert = ssl._create_default_https_context(cafile=certifi.where())
             if not os.path.exists(image_path):
                 os.makedirs(image_path)
             for i, src in enumerate(src_list):
-                urllib.request.urlretrieve(src, f"{image_path}/{image_name}.{i}.jpg")
+                imagerequest = requests.get(src, stream=True) 
+                gameimage = open(f'{image_path}/{image_name}.{i}.jpg', 'wb')
+                for chunk in imagerequest.iter_content(1024):
+                    gameimage.write(chunk)
+                # Guess the image type using mimetypes library. Return the first element of the tuple. 
+                check_image_type = mimetypes.guess_type(f'{image_path}/{image_name}.{i}.jpg')[0]
+                logger.debug(f'Image type is {check_image_type}')
+                gameimage.close()
+                logger.info(f"Game image for {game_name} is now avaliable in image path.")
+                #TODO: Import mimetypes and validate the image file 
+            return check_image_type  
+
 
         except SSLError:
+            ssl._create_default_https_context(cafile=certifi.where())
             for url in src_list:
                 url.replace("https", "http")
                 image_path = f"images/{image_category}"
@@ -341,6 +356,10 @@ class Scraper:
                 os.makedirs(image_path)
             for i, src in enumerate(src_list):
                 urllib.request.urlretrieve(src, f"{image_path}/{image_name}.{i}.jpg")
+            # Guess the image type using mimetypes library. Return the first element of the tuple.
+            check_image_type = mimetypes.guess_type(f'{image_path}/{image_name}.{i}.jpg')[0]
+            logger.debug(f'Image type is {check_image_type}')
+            return check_image_type
 
     def set_s3_connection(self):
         """
@@ -418,7 +437,7 @@ class Scraper:
         file_name = f"{sub_category_name}-details.json"
         # Logic for uploading to cloud servers.
         # If the user sets s3_upload to True, perform the following:
-
+        
         if not os.path.exists("json-files"):
             os.makedirs("json-files")
         with open(f"json-files/{file_name}", mode="a+", encoding="utf-8-sig") as f:

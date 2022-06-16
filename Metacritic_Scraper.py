@@ -288,7 +288,6 @@ class MetaCriticScraper(Scraper):
         '''
         A method which combines all of the previous methods to 
         scrape information from the webpage 
-
         Parameters: 
         file_name : str 
         The name of the file 
@@ -340,9 +339,16 @@ class MetaCriticScraper(Scraper):
                         all_data_list.append(self.get_information_from_page())
 
             logger.info(all_data_list)
-            self.save_json(all_data_list, "fighting-games")
-            logger.info("Scrape complete! Exiting...")
-            self.driver.quit()
+            # Logic to prevent a .json file being created if the list is empty
+            if len(all_data_list) == 0:
+                print('Empty list')
+                logger.warning('No .json file created. Empty records. Exiting...')
+                self.driver.quit()
+            else:
+                # But if there is data, save it to the directory.
+                self.save_json(all_data_list, "fighting-games")
+                logger.info("Scrape complete! Exiting...")
+                self.driver.quit()
 
         
     
