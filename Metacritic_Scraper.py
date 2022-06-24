@@ -90,7 +90,6 @@ class MetaCriticScraper(Scraper):
             "description": './/li[@class="summary_detail product_summary"]',
         }
 
-        self.href_list_scraped = self.record_check()
 
 
     def accept_cookies(self, cookies_button_xpath: str):
@@ -306,37 +305,32 @@ class MetaCriticScraper(Scraper):
         with open(f"{file_name}.txt") as file:
 
             all_data_list = []
-                      
+            list_of_records = self.record_check("Fighting_Games", "link_to_page")          
             for line in file.read().splitlines():
-                # print(line)
-                # print(type(line))
-                list_of_records = self.record_check("Fighting_Games", "link_to_page")
-
-                for record in list_of_records:
-                    # print(record)
-                    # print(line)
-                    if line == str(record):
-                        print('Already scraped')
-                        logger.debug(f'{line} has already been scraped')
-                        continue
+                
                 try:
                     
                     self.driver.implicitly_wait(3)
                     self.driver.get(str(line))
-                    all_data_list.append(self.get_information_from_page())
+                    if line in list_of_records:
+                        print('Already scraped')
+                        logger.debug('This record is already within the database')
+                        continue
+                    else:
+                        all_data_list.append(self.get_information_from_page())
                       
                     
                 except TimeoutException:
-                    try:
-                        if line in list_of_records:
-                            print('Already scraped')
-                            logger.debug(f'{line} has already been scraped')
-                            continue
-                    except:
-                        logger.warning("Timeoutexception on this page. Retrying.")
-                        self.driver.implicitly_wait(3)
-                        self.driver.refresh()
+                    logger.warning("Timeoutexception on this page. Retrying.")
+                    self.driver.implicitly_wait(3)
+                    self.driver.refresh()
+                    if line in list_of_records:
+                        print('Already scraped')
+                        logger.debug('This record is already within the database')
+                        continue
+                    else:
                         all_data_list.append(self.get_information_from_page())
+                    
 
             logger.info(all_data_list)
             # Logic to prevent a .json file being created if the list is empty
@@ -346,24 +340,29 @@ class MetaCriticScraper(Scraper):
                 self.driver.quit()
             else:
                 # But if there is data, save it to the directory.
-                self.save_json(all_data_list, "fighting-games_2")
+                self.save_json(all_data_list, "fighting-games")
                 logger.info("Scrape complete! Exiting...")
                 self.driver.quit()
 
         
     
     
-    def record_check(self, table_name, column_name):
+    def record_check(self, table_name : str, column_name : str):
         '''
-        Staticmethod to check if a record already exists inside the RDS. 
+        Method to create a list of hrefs from the RDS to be compared
+        against the links scraped. 
 
-        How it will be checked: 
-        Query the links to the pages of the website. 
-        Store these inside a list 
-        Everytime a page is loaded, check whether the link exists within the list. 
-        If it does exist, skip scraping the page. 
-        If it does not exist, scrape the page, and append it to the all_data_list. 
-        
+        Parameters: 
+
+        table_name : str 
+        The name of your RDS table 
+
+        column_name : str 
+        The name of your column name 
+
+        Returns: 
+        column_list : list 
+        Returns a list of the column queried within the RDS. 
         '''
 
         
@@ -377,29 +376,9 @@ class MetaCriticScraper(Scraper):
             result = pd.read_sql_query(sql, self.engine)
 
             # Cast the pandas dataframe to a list to be compared. 
-            href_list = result[column_name].tolist()
-           
-        # For each entry inside the list 
-        # for entry in href_list:
-
-        #     # convert it to a pandas dataframe 
-        #     rds_entry = pd.DataFrame([entry])
-            
-        #     # If the entry is not in the list of items in the table name 
-
-        #     if entry in href_list:
-        #         # Take the dataframe and append it to the RDS 
-        #         logger.warning('This record already exists inside the database')
-
-                
-        #     # But if it does not exist, state that the record has already been scraped, then continue the process
-        #     else:
-        #         rds_entry.to_sql(table_name, self.engine, if_exists='append')
-            
-        # In either case, return the href_list to check against the href_list in the database
-        print(type(href_list))
+            column_list = result[column_name].tolist()
        
-        return href_list
+        return column_list
 
                        
 
