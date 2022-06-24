@@ -90,7 +90,7 @@ class MetaCriticScraper(Scraper):
             "description": './/li[@class="summary_detail product_summary"]',
         }
 
-       
+        self.href_list_scraped = self.record_check()
 
 
     def accept_cookies(self, cookies_button_xpath: str):
@@ -346,7 +346,7 @@ class MetaCriticScraper(Scraper):
                 self.driver.quit()
             else:
                 # But if there is data, save it to the directory.
-                self.save_json(all_data_list, "fighting-games")
+                self.save_json(all_data_list, "fighting-games_2")
                 logger.info("Scrape complete! Exiting...")
                 self.driver.quit()
 
@@ -380,21 +380,21 @@ class MetaCriticScraper(Scraper):
             href_list = result[column_name].tolist()
            
         # For each entry inside the list 
-        for entry in href_list:
+        # for entry in href_list:
 
-            # convert it to a pandas dataframe 
-            rds_entry = pd.DataFrame([entry])
+        #     # convert it to a pandas dataframe 
+        #     rds_entry = pd.DataFrame([entry])
             
-            # If the entry is not in the list of items in the table name 
+        #     # If the entry is not in the list of items in the table name 
 
-            if entry in href_list:
-                # Take the dataframe and append it to the RDS 
-                logger.warning('This record already exists inside the database')
+        #     if entry in href_list:
+        #         # Take the dataframe and append it to the RDS 
+        #         logger.warning('This record already exists inside the database')
 
                 
-            # But if it does not exist, state that the record has already been scraped, then continue the process
-            else:
-                rds_entry.to_sql(table_name, self.engine, if_exists='append')
+        #     # But if it does not exist, state that the record has already been scraped, then continue the process
+        #     else:
+        #         rds_entry.to_sql(table_name, self.engine, if_exists='append')
             
         # In either case, return the href_list to check against the href_list in the database
         print(type(href_list))
