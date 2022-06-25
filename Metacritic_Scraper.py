@@ -1,14 +1,19 @@
 import time
 import os
+import yaml 
 from numpy import number
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from urllib3 import Timeout
 from ScraperClass import Scraper
 from data_cleaning import DataCleaning
+from data_cleaning import DataCleaning
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from tqdm import tqdm
+from sqlalchemy import create_engine
+import sqlalchemy
+import pandas as pd 
 
 # from alive_progress import alive_bar
 import uuid
@@ -51,17 +56,28 @@ class MetaCriticScraper(Scraper):
 
     def __init__(self, url):
         super().__init__()
-
+        with open('config/RDS_details_config.yaml') as file:
+            creds = yaml.safe_load(file)
+            DATABASE_TYPE = creds['DATABASE_TYPE']
+            DBAPI = creds['DBAPI']
+            ENDPOINT = creds['ENDPOINT']
+            USER = creds['USER']
+            PASSWORD = creds['PASSWORD']
+            DATABASE = creds['DATABASE']
+            PORT = creds['PORT']
+        
+        self.engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{ENDPOINT}:{PORT}/{DATABASE}")
+        self.engine.connect() 
         try:
             self.driver.set_page_load_timeout(30)
             self.land_first_page(url)
         except TimeoutException as ex:
             print("Exception has been thrown. " + str(ex))
             self.driver.quit()
-
+        
         self.page_counter = 0
-
-        # TODO: Adjust the keys of the self.xpaths_dict to take the headings from the pages.
+        
+        # Dictionary of xpaths representing web_elements on the page. 
         self.xpaths_dict = {
             "uuid": "",
             "title": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[2]/a/h1',
@@ -74,12 +90,34 @@ class MetaCriticScraper(Scraper):
             "description": './/li[@class="summary_detail product_summary"]',
         }
 
+
+
     def accept_cookies(self, cookies_button_xpath: str):
+        '''
+        Method to click the accept cookies on the webpage 
+
+        parameters: 
+        cookies_button_xpath : str
+        A string which represents the web element for the accept_cookies button 
+
+        returns: 
+        bool: True if the button exists 
+
+        '''
         return super().accept_cookies(cookies_button_xpath)
 
     def choose_category(self, category_selection: str = "game" or "music"):
 
         """
+        Method to choose a category on the webpage
+
+        Parameters: 
+        category_selection : str 
+        A string representing the selection of the choice i.e. game or music
+
+        returns: 
+        category_selection : str 
+
         Currently works for games and music pages
         """
 
@@ -98,7 +136,17 @@ class MetaCriticScraper(Scraper):
 
     def choose_genre(self):
 
-        """
+        """ 
+        Method to choose the genre on the webpage
+
+        Parameters: 
+        None 
+
+        Returns: 
+        list_of_genre_links 
+
+        Returns a list of links to the genres on the page. 
+
         Currently works for games, tv and music
         """
         genre_container = self.driver.find_elements(
@@ -115,26 +163,18 @@ class MetaCriticScraper(Scraper):
         logger.info(f"Here are the list of genres: {list_of_genres}")
         return list_of_genre_links
 
-    def click_next_page(self, page):
-
-        next_page_element = self.driver.find_element(
-            By.XPATH,
-            f'//*[@id="main_content"]/div[1]/div[2]/div/div[1]/div/div[9]/div/div/div[2]/ul/li[{page}]/*',
-        )
-        next_page_url = next_page_element.get_attribute("href")
-
-        self.driver.get(str(next_page_url))
-        logger.debug(page)
-        logger.debug(type(page))
-        # print(next_page_url)
-        logger.info("navigating to next page")
-
-        return next_page_url
 
     def get_information_from_page(self):
+        '''
+        Method to collect the information from the webpage 
 
+        Returns: 
+        A dictionary containing key, value pairs for the information 
+        extracted via the self.xpaths_dict. 
+        '''
         page_information_dict = {}
-        # TODO: This could be a staticmethod?
+        # Use tuple unpacking to iterate through the keys and values of the 
+        # xpaths_dict 
         for key, xpath in self.xpaths_dict.items():
 
             try:
@@ -189,6 +229,17 @@ class MetaCriticScraper(Scraper):
 
     def process_page_links(self, file_name: str):
 
+        '''
+        Method to process the page links and store them inside a text_file
+
+        Parameters: 
+        file_name : str 
+
+        The name of the file 
+
+        Returns:
+        None 
+        '''
         list_of_all_pages_to_visit = []
 
         page_value = self.collect_number_of_pages(
@@ -228,45 +279,108 @@ class MetaCriticScraper(Scraper):
                 except TimeoutException:
                     if range_final:
                         break
-                # TODO: During this loop, the outputs of the links are stored inside a text file 
+                # During this loop, the outputs of the links are stored inside a text file 
                 # to be called when running the sample_scraper method
 
     def sample_scraper(self, file_name: str):
+
+        '''
+        A method which combines all of the previous methods to 
+        scrape information from the webpage 
+        Parameters: 
+        file_name : str 
+        The name of the file 
+        '''
         # Goes to Games > Games Home > 'Search by Genre': Fighting > Scrapes 6 pages of content
+
+        # Create a list of hrefs to scrape 
         genre_list = self.choose_genre()
+        # Get the 2nd index of the genre_list i.e. Fighting Games in this case. 
         self.driver.get(genre_list[2])
 
-        self.process_page_links(file_name)
+        # Process the links and store them inside a .txt file to iterate through.
+        # self.process_page_links(file_name)
 
+        # Open the file name and iterate through the links inside the file
         with open(f"{file_name}.txt") as file:
 
             all_data_list = []
-
-            for line in file:
+            list_of_records = self.record_check("Fighting_Games", "link_to_page")          
+            for line in file.read().splitlines():
+                
                 try:
+                    
                     self.driver.implicitly_wait(3)
                     self.driver.get(str(line))
-
-                    all_data_list.append(self.get_information_from_page())
-
+                    if line in list_of_records:
+                        print('Already scraped')
+                        logger.debug('This record is already within the database')
+                        continue
+                    else:
+                        all_data_list.append(self.get_information_from_page())
+                      
+                    
                 except TimeoutException:
                     logger.warning("Timeoutexception on this page. Retrying.")
                     self.driver.implicitly_wait(3)
                     self.driver.refresh()
-
-                    all_data_list.append(self.get_information_from_page())
+                    if line in list_of_records:
+                        print('Already scraped')
+                        logger.debug('This record is already within the database')
+                        continue
+                    else:
+                        all_data_list.append(self.get_information_from_page())
+                    
 
             logger.info(all_data_list)
-            self.save_json(all_data_list, "fighting-games")
-            logger.info("Scrape complete! Exiting...")
-            self.driver.quit()
+            # Logic to prevent a .json file being created if the list is empty
+            if len(all_data_list) == 0:
+                print('Empty list')
+                logger.warning('No .json file created. Empty records. Exiting...')
+                self.driver.quit()
+            else:
+                # But if there is data, save it to the directory.
+                self.save_json(all_data_list, "fighting-games")
+                logger.info("Scrape complete! Exiting...")
+                self.driver.quit()
 
-        return all_data_list
+        
+    
+    
+    def record_check(self, table_name : str, column_name : str):
+        '''
+        Method to create a list of hrefs from the RDS to be compared
+        against the links scraped. 
 
-    def create_dataframe(self, all_data_list):
-        new_dataframe = DataCleaning(all_data_list, encoding="utf-8-sig")
-        new_dataframe.clean_dataframe(all_data_list)
+        Parameters: 
 
+        table_name : str 
+        The name of your RDS table 
+
+        column_name : str 
+        The name of your column name 
+
+        Returns: 
+        column_list : list 
+        Returns a list of the column queried within the RDS. 
+        '''
+
+        
+        # Inspect the engine of the RDS database. Find the table_name if it exists 
+        if sqlalchemy.inspect(self.engine).has_table(table_name):
+            
+            # If it exists, run a query to select the specified column 
+            sql = sqlalchemy.text(f'SELECT {column_name} FROM "{table_name}"')
+
+            # Next, read the sql query into a pandas dataframe
+            result = pd.read_sql_query(sql, self.engine)
+
+            # Cast the pandas dataframe to a list to be compared. 
+            column_list = result[column_name].tolist()
+       
+        return column_list
+
+                       
 
 if __name__ == "__main__":
     new_scraper = MetaCriticScraper("https://www.metacritic.com")

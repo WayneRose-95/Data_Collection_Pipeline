@@ -16,8 +16,7 @@ import yaml
 
 class DataCleaning: 
 
-    def __init__(self, file_pathway, encoding=None):
-        self.data = self.create_dataframe(file_pathway) 
+    def __init__(self): 
         with open('config/RDS_details_config.yaml') as file:
             creds = yaml.safe_load(file)
             DATABASE_TYPE = creds['DATABASE_TYPE']
@@ -35,7 +34,7 @@ class DataCleaning:
         raw_data = pd.read_json(file_pathway, encoding='utf-8-sig')
         return raw_data
     
-    def clean_dataframe(self, file_pathway):
+    def clean_dataframe(self, file_pathway, table_name):
         # Create the dataframe 
         raw_data = self.create_dataframe(file_pathway)
 
@@ -49,7 +48,7 @@ class DataCleaning:
         raw_data = raw_data.astype(
             {
             'title': 'string', 
-            'tink_to_page': 'string', 
+            'link_to_page': 'string', 
             'platform': 'string',
             'release_date': 'string',
             'developer': 'string',  
@@ -70,11 +69,11 @@ class DataCleaning:
         # Lastly, for each column in the description column, strip the word 'Summary:' off of each of the records. 
         raw_data.description = raw_data.description.str.strip('Summary:')
         raw_data.head()
-        
+        raw_data.to_sql(table_name, con=self.engine, if_exists='replace')
         # return the raw_data as a cleaned dataframe
         return raw_data
 
 if __name__ == "__main__":
     file_path = os.getcwd()
-    new_data = DataCleaning(file_path + '\\json-files\\fighting-games-details.json', encoding= 'utf-8-sig' )
-    new_data.clean_dataframe(file_path + '\\json-files\\fighting-games-details.json')
+    new_data = DataCleaning()
+    new_data.clean_dataframe(file_path + '\\json-files\\fighting-games-details.json', 'Fighting_Games')
