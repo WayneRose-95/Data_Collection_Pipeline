@@ -5,9 +5,11 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchFrameException
+
 # from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
 # from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.service import Service
 from urllib3.exceptions import SSLError
@@ -15,6 +17,7 @@ from typing import Optional
 from time import sleep
 import urllib.request
 import boto3
+
 # import tempfile
 import os
 import uuid
@@ -23,8 +26,8 @@ import itertools
 import requests
 import certifi
 import logging
-import ssl 
-import mimetypes 
+import ssl
+import mimetypes
 
 
 #%%
@@ -80,32 +83,32 @@ class Scraper:
         )  #
 
     def land_first_page(self, page_url: str):
-        '''
-        Method to accquire the first page of the website 
+        """
+        Method to accquire the first page of the website
 
-        parameters: 
-        page_url : str 
+        parameters:
+        page_url : str
         A link which represents the webpage
 
-        '''
+        """
         home_page = self.driver.get(page_url)
         logger.debug("Landed first page")
         return home_page
 
     def accept_cookies(self, cookies_button_xpath: str, iframe: Optional[str] = None):
 
-        '''
-        Method to click the accept_cookies button on the webpage 
+        """
+        Method to click the accept_cookies button on the webpage
 
-        Parameters: 
-        cookies_button_xpath : str 
+        Parameters:
+        cookies_button_xpath : str
         A string which represents the web_element for the accept_cookies button
 
         iframe: Optional[str]:
-        An optional parameter which can be called in case the button is within 
-        an iframe. 
+        An optional parameter which can be called in case the button is within
+        an iframe.
 
-        '''
+        """
         sleep(4)
         try:
             if iframe:  # To find if the accept cookies button is within a frame
@@ -133,19 +136,19 @@ class Scraper:
 
     def look_for_search_bar(self, search_bar_xpath: str):
 
-        '''
-        Method to look for a search bar on the webpage 
+        """
+        Method to look for a search bar on the webpage
 
-        Parameters: 
+        Parameters:
 
-        search_bar_xpath : str 
+        search_bar_xpath : str
         A string which represents the web-element for the search bar on the webpage
 
-        Returns: 
-        search_bar_element: 
-        A web-element representing the search bar on the webpage 
+        Returns:
+        search_bar_element:
+        A web-element representing the search bar on the webpage
 
-        '''
+        """
         try:
             search_bar_element = WebDriverWait(self.driver, 0.5).until(
                 EC.presence_of_element_located((By.XPATH, search_bar_xpath))
@@ -159,22 +162,22 @@ class Scraper:
         return search_bar_element
 
     def send_keys_to_search_bar(self, search_bar_xpath: str, text: str):
-        '''
-        Method to look for a search bar on the webpage 
+        """
+        Method to look for a search bar on the webpage
 
-        Parameters: 
+        Parameters:
 
-        search_bar_xpath : str 
+        search_bar_xpath : str
         A string which represents the web-element for the search bar on the webpage
 
-        text : str 
-        The text which the user wants to put into the search bar i.e. "text" 
+        text : str
+        The text which the user wants to put into the search bar i.e. "text"
 
-        Returns: 
-        search_bar_element: 
-        A web-element representing the search bar on the webpage 
+        Returns:
+        search_bar_element:
+        A web-element representing the search bar on the webpage
 
-        '''
+        """
         search_bar_element = self.look_for_search_bar(search_bar_xpath)
 
         if search_bar_element:
@@ -264,19 +267,19 @@ class Scraper:
 
     def apply_filter_list(self, filter_container_xpath: str, filter_button=None):
 
-        '''
-        Method to work with the filter lists on a webpage. 
+        """
+        Method to work with the filter lists on a webpage.
 
-        Parameters: 
+        Parameters:
 
-        filter_container_xpath : str 
-        
+        filter_container_xpath : str
+
         A string which represents the web-element for the filter container on the page
 
-        filter_button = None 
+        filter_button = None
         A string which represents the web-element for the filter button on the page
 
-        '''
+        """
         if filter_button:
             filter_button = self.driver.find_element(By.XPATH, filter_button)
             filter_button.click()
@@ -306,23 +309,23 @@ class Scraper:
             print(filter_container_list)
             return filter_container_list
 
-    def download_image(self, image_xpath : str, game_category: str, game_name: str):
+    def download_image(self, image_xpath: str, game_category: str, game_name: str):
 
-        '''
-        Method to download the image from the webpage 
+        """
+        Method to download the image from the webpage
 
-        Parameters: 
+        Parameters:
         image_xpath : str
-        A string which represents the web element of the image on the webpage 
-        e.g. 
+        A string which represents the web element of the image on the webpage
+        e.g.
         '//*[@id="product-gallery"]/div[2]/div[2]/div[2]/img'
 
-        game_category : str 
-        The category which the game is in i.e. Action, Adventure, RPG etc. 
+        game_category : str
+        The category which the game is in i.e. Action, Adventure, RPG etc.
 
-        Game_Name : str 
+        Game_Name : str
         A string representing the name of the game being downloaded
-        '''
+        """
         image_category = game_category
         image_name = f"{game_name}-{game_category}-image"
         src_list = self.extract_page_links(image_xpath, "src")
@@ -334,18 +337,21 @@ class Scraper:
             if not os.path.exists(image_path):
                 os.makedirs(image_path)
             for i, src in enumerate(src_list):
-                imagerequest = requests.get(src, stream=True) 
-                gameimage = open(f'{image_path}/{image_name}.{i}.jpg', 'wb')
+                imagerequest = requests.get(src, stream=True)
+                gameimage = open(f"{image_path}/{image_name}.{i}.jpg", "wb")
                 for chunk in imagerequest.iter_content(1024):
                     gameimage.write(chunk)
-                # Guess the image type using mimetypes library. Return the first element of the tuple. 
-                check_image_type = mimetypes.guess_type(f'{image_path}/{image_name}.{i}.jpg')[0]
-                logger.debug(f'Image type is {check_image_type}')
+                # Guess the image type using mimetypes library. Return the first element of the tuple.
+                check_image_type = mimetypes.guess_type(
+                    f"{image_path}/{image_name}.{i}.jpg"
+                )[0]
+                logger.debug(f"Image type is {check_image_type}")
                 gameimage.close()
-                logger.info(f"Game image for {game_name} is now avaliable in image path.")
-                #TODO: Import mimetypes and validate the image file 
-            return check_image_type  
-
+                logger.info(
+                    f"Game image for {game_name} is now avaliable in image path."
+                )
+                # TODO: Import mimetypes and validate the image file
+            return check_image_type
 
         except SSLError:
             ssl._create_default_https_context(cafile=certifi.where())
@@ -357,8 +363,10 @@ class Scraper:
             for i, src in enumerate(src_list):
                 urllib.request.urlretrieve(src, f"{image_path}/{image_name}.{i}.jpg")
             # Guess the image type using mimetypes library. Return the first element of the tuple.
-            check_image_type = mimetypes.guess_type(f'{image_path}/{image_name}.{i}.jpg')[0]
-            logger.debug(f'Image type is {check_image_type}')
+            check_image_type = mimetypes.guess_type(
+                f"{image_path}/{image_name}.{i}.jpg"
+            )[0]
+            logger.debug(f"Image type is {check_image_type}")
             return check_image_type
 
     def set_s3_connection(self):
@@ -417,27 +425,27 @@ class Scraper:
         return image_dict
 
     def save_json(self, all_products_dictionary: list or dict, sub_category_name: str):
-        '''
-        Method to save the products into a .json format 
+        """
+        Method to save the products into a .json format
 
-        Parameters: 
-        all_products_dictionary : list or dict 
-        A dictionary or list representing the data to be converted 
+        Parameters:
+        all_products_dictionary : list or dict
+        A dictionary or list representing the data to be converted
 
-        sub_category_name : str 
-        The name of the .json file the user wants to give to the .json file. 
+        sub_category_name : str
+        The name of the .json file the user wants to give to the .json file.
 
-        Returns: 
-        True : Bool 
-        If the .json file has been created. 
+        Returns:
+        True : Bool
+        If the .json file has been created.
 
-        
-        '''
+
+        """
         file_to_convert = all_products_dictionary
         file_name = f"{sub_category_name}-details.json"
         # Logic for uploading to cloud servers.
         # If the user sets s3_upload to True, perform the following:
-        
+
         if not os.path.exists("json-files"):
             os.makedirs("json-files")
         with open(f"json-files/{file_name}", mode="a+", encoding="utf-8-sig") as f:
