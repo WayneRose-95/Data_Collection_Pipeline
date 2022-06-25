@@ -313,7 +313,7 @@ class MetaCriticScraper(Scraper):
 
         return column_list
 
-    def sample_scraper(self, file_name: str, json_file_name: str):
+    def scrape_details(self, file_name: str, json_file_name: str):
 
         """
         A method which combines all of the previous methods to
