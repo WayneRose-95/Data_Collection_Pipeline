@@ -37,6 +37,68 @@ Each of the pages has the following metrics to compare and contrast:
 * Developer
 * Description 
 
+## Milestone 2 - Prototype finding the individual page for each entry 
+
+For this milestone, a Scraper Class was created 
+![image](https://user-images.githubusercontent.com/89411656/175793708-8b4d1486-8e78-4a41-9b40-64b737c4d794.png)
+
+This class would house general all purpose webscraping methods. From interacting with buttons on a page to collecting page_links. 
+
+Methods from this class would be inherited within the script specific to the website  for reusability purposes. 
+
+## Milestone 3 - Retrieve data from details page 
+
+Metacritic_Scraper.py was created by inheriting methods from the ScraperClass.py script as shown below: 
+
+![image](https://user-images.githubusercontent.com/89411656/175793797-65dedc98-ecdc-449d-98f4-4b40bc42adac.png)
+
+By observing the details page, the metrics as shown in Milestone 1 could be scraped using Selenium Webdriver 
+
+To do this, a dictionary of xpaths was created in the __init__ method of the Metacritic_Scraper.py script 
+
+![image](https://user-images.githubusercontent.com/89411656/175793820-4f677087-76c3-404a-96ae-75665fd7da84.png)
+
+Next, using python's tuple unpacking, the key of the xpaths_dict was set as the key of the page_information_dict, whose value was the text of the web-element from the xpaths_dict. 
+
+![image](https://user-images.githubusercontent.com/89411656/175793865-05aaf3e3-279f-4f79-be64-3b81e6584b33.png)
+
+Each attempt at collecting a web-element from the page was encased inside a try/except block to catch any difficulties found when finding elements such as empty pages or no element present. 
+
+On top of this, there were further difficulties in collecting data from certain fields. These cases were remedied by using if statements where necessary. 
+
+For each dictionary created, a UUID v4 was made to uniquely distinguish each record scraped. 
+
+## Milestone 4 - Documentation and Testing 
+
+As the code grew bigger and bigger, it became difficult to understand what each of the methods were doing. What is this method's purpose? What does it return? 
+
+This was when docstrings and log files were added to answer these questions. 
+
+An example of a docstring inside the code is shown below: 
+![image](https://user-images.githubusercontent.com/89411656/175794090-ebe97095-3fc5-4b27-916d-d79d6e61d54d.png)
+
+For the log files, these were important to track processes within the code as it was running. When the code was run, a directory containing the logs was created to track these processes. 
+
+![image](https://user-images.githubusercontent.com/89411656/175794105-d68b5ad6-54c8-462f-8167-1b70316dfdfe.png)
+
+That said, it is all well and good to have monitoring and explanations of methods in place, but how do we know if each of our methods are working as intended?  
+
+Python's built-in Unittest module allows for snippets of code to be tested against certain assertions. 
+
+A sample test is shown below: 
+![image](https://user-images.githubusercontent.com/89411656/175794178-559da984-c41e-4f0b-8741-f91023ade401.png)
+
+This became a powerful asset in the project as the tests could be written to detect any discrepancies in the code. 
+
+In the above example, 3 hrefs are used to test the Scraper's ability to scrape from multiple pages of varying review scores. 
+
+This test was created, as at first, the scraper was only able to take metacritic and user_scores from positively recieved titles. 
+
+By making edits to the method, and running the test script, the ouptuts of the dictionary could be validated to catch bugs in collecting data. 
+
+As a result, whenever a new method was added, it would be tested. Overall, this method of test-driven development saved valuable time within development. 
+
+
 <!--
 
 ## Milestone 2
