@@ -1,5 +1,5 @@
 # Data_Collection_Pipeline
-An end to end, scalable data-pipeline. 
+An end to end, scalable data-pipeline. Please see the develop branch for the latest version in development.  
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 
