@@ -16,6 +16,16 @@ import yaml
 
 class DataCleaning: 
 
+    '''
+    A class which contains methods which extracts .json files. 
+    Files are converted into a Pandas dataframe, from which they are cleaned.
+    Cleaned dataframes are then uploaded to the RDS given in the config file. 
+
+    Attributes:
+    self.engine: The connection to the RDS configured via the config file. 
+
+    '''
+
     def __init__(self): 
         with open('config/RDS_details_config.yaml') as file:
             creds = yaml.safe_load(file)
@@ -30,11 +40,35 @@ class DataCleaning:
         self.engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{ENDPOINT}:{PORT}/{DATABASE}")
         self.engine.connect() 
     
-    def create_dataframe(self, file_pathway, encoding=None):
+    def create_dataframe(self, file_pathway : str, encoding=None):
+        '''
+        Method to create a dataframe and return the data as a dataframe 
+
+        Parameters: 
+        file_pathway:
+        The path to your .json file 
+
+        encoding=None:
+        An optional argument for reading irregular characters. 
+
+        Returns: 
+        raw_data: 
+        The dataframe which has been converted from the .json file. 
+        '''
         raw_data = pd.read_json(file_pathway, encoding='utf-8-sig')
         return raw_data
     
-    def clean_dataframe(self, file_pathway, table_name):
+    def clean_dataframe(self, file_pathway : str, table_name : str):
+        '''
+        Method to clean the dataframe using pandas functions 
+
+        Parameters: 
+        file_pathway:
+        The path to your .json file 
+
+        table_name: 
+        The name of the table that the user can choose for the RDS. 
+        '''
         # Create the dataframe 
         raw_data = self.create_dataframe(file_pathway)
 
@@ -69,6 +103,7 @@ class DataCleaning:
         # Lastly, for each column in the description column, strip the word 'Summary:' off of each of the records. 
         raw_data.description = raw_data.description.str.strip('Summary:')
         raw_data.head()
+        # Send the data to the RDS. If the table already exists, replace it. 
         raw_data.to_sql(table_name, con=self.engine, if_exists='replace')
         # return the raw_data as a cleaned dataframe
         return raw_data
