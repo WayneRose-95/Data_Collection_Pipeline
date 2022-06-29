@@ -98,6 +98,37 @@ By making edits to the method, and running the test script, the ouptuts of the d
 
 As a result, whenever a new method was added, it would be tested. Overall, this method of test-driven development saved valuable time within development. 
 
+# Milestone 5 - Scalably Storing the Data 
+
+After completing the scraping process. The raw data was saved inside a .json file. 
+
+This .json file would then be cleaned by creating a seperate class dedicated to cleaning data from the .jsons from the website. 
+
+![image](https://user-images.githubusercontent.com/89411656/176451490-198d6a15-d969-4751-b54e-912beb2c2172.png)
+
+The resulting cleaned pandas dataframes would then be uploaded to an RDS running in AWS. 
+
+As shown in the image above, a config.yaml file was made to securely connect to the database. 
+
+A snapshot of the database can be found below
+![image](https://user-images.githubusercontent.com/89411656/176452182-8d8193a9-2618-4568-a5aa-aa4ccca20034.png)
+
+# Milestone 6 - Prevent Rescraping of the same data 
+
+In order to speed up processing time, and send clean, new records to the database. 
+Logic was placed inside the code to prevent data from the same pages from being rescraped. 
+
+To do this, a new method called record_check was created. 
+
+![image](https://user-images.githubusercontent.com/89411656/176453030-7aa53e04-ecc8-487e-acec-a77c30c38fe5.png)
+
+This method was used to create a list of hrefs which have already been visited by the scraper. 
+
+This list was then compared with the hrefs collected. If the hrefs collected during the scrape were already inside the RDS, then the page would be skipped. Saving time, and preventing duplicate records. 
+
+![image](https://user-images.githubusercontent.com/89411656/176453763-48682e8d-11db-43a0-bc28-fa8e269ed7e8.png)
+
+
 
 <!--
 
