@@ -162,7 +162,7 @@ class MetaCriticScraper(Scraper):
         logger.info(f"Here are the list of genres: {list_of_genres}")
         return list_of_genre_links
 
-    def get_information_from_page(self):
+    def _get_information_from_page(self):
         """
         Method to collect the information from the webpage
 
@@ -225,7 +225,7 @@ class MetaCriticScraper(Scraper):
         print(page_information_dict)
         return page_information_dict
 
-    def process_page_links(self, file_name: str):
+    def _process_page_links(self, file_name: str):
 
         """
         Method to process the page links and store them inside a text_file
@@ -309,7 +309,10 @@ class MetaCriticScraper(Scraper):
 
             # Cast the pandas dataframe to a list to be compared.
             column_list = result[column_name].tolist()
-
+        else:
+            logger.warning('No table name found. Please create a SQL table.')
+            print('No table name found. column_list is empty')
+            column_list = []
         return column_list
     
     def _create_dataframe(self, file_pathway : str, encoding=None):
@@ -401,7 +404,7 @@ class MetaCriticScraper(Scraper):
         self.driver.get(genre_list[2])
 
         # Process the links and store them inside a .txt file to iterate through.
-        self.process_page_links(file_name)
+        self._process_page_links(file_name)
 
         # Open the file name and iterate through the links inside the file
         with open(f"{file_name}.txt") as file:
@@ -419,7 +422,7 @@ class MetaCriticScraper(Scraper):
                         logger.debug("This record is already within the database")
                         continue
                     else:
-                        all_data_list.append(self.get_information_from_page())
+                        all_data_list.append(self._get_information_from_page())
 
                 except TimeoutException:
                     logger.warning("Timeoutexception on this page. Retrying.")
@@ -430,7 +433,7 @@ class MetaCriticScraper(Scraper):
                         logger.debug("This record is already within the database")
                         continue
                     else:
-                        all_data_list.append(self.get_information_from_page())
+                        all_data_list.append(self._get_information_from_page())
 
             logger.info(all_data_list)
             # Logic to prevent a .json file being created if the list is empty
