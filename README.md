@@ -3,6 +3,8 @@ An end to end, scalable data-pipeline. Please see the develop branch for the lat
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 
+> The first pre-release version of this project has been released. Please see the releases tab 
+
 > The goal of the project is to create a scalable data-pipeline, which runs autonomously within a cloud environment.
 
 > Technologies Used: 
