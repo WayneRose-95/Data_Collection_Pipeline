@@ -134,7 +134,7 @@ class Scraper:
             logger.debug("The accept cookies button has been clicked")
         return True
 
-    def look_for_search_bar(self, search_bar_xpath: str):
+    def _look_for_search_bar(self, search_bar_xpath: str):
 
         """
         Method to look for a search bar on the webpage
@@ -161,7 +161,7 @@ class Scraper:
 
         return search_bar_element
 
-    def send_keys_to_search_bar(self, search_bar_xpath: str, text: str):
+    def _send_keys_to_search_bar(self, search_bar_xpath: str, text: str):
         """
         Method to look for a search bar on the webpage
 
@@ -189,7 +189,7 @@ class Scraper:
 
         return text
 
-    def infinite_scroll_down_page(self):
+    def _infinite_scroll_down_page(self):
 
         SCROLL_PAUSE_TIME = 5
 
@@ -241,7 +241,7 @@ class Scraper:
         print(f"Pages visited: {len(self.page_links_list)}")
         return self.page_links_list
 
-    def click_button_on_page(self, button_xpath):
+    def _click_button_on_page(self, button_xpath):
         return self.driver.find_element(By.XPATH, button_xpath).click()
 
     def collect_number_of_pages(self, last_page_number_selector: str):
@@ -257,7 +257,7 @@ class Scraper:
 
         return last_page_number
 
-    def find_container(self, container_xpath: str):
+    def _find_container(self, container_xpath: str):
         try:
             container = self.driver.find_element(By.XPATH, container_xpath)
             print(container)
@@ -265,7 +265,7 @@ class Scraper:
             logger.exception("There was no element. Please check your xpath")
             raise Exception
 
-    def apply_filter_list(self, filter_container_xpath: str, filter_button=None):
+    def _apply_filter_list(self, filter_container_xpath: str, filter_button=None):
 
         """
         Method to work with the filter lists on a webpage.
@@ -309,7 +309,7 @@ class Scraper:
             print(filter_container_list)
             return filter_container_list
 
-    def download_image(self, image_xpath: str, game_category: str, game_name: str):
+    def _download_image(self, image_xpath: str, game_category: str, game_name: str):
 
         """
         Method to download the image from the webpage
@@ -369,7 +369,7 @@ class Scraper:
             logger.debug(f"Image type is {check_image_type}")
             return check_image_type
 
-    def set_s3_connection(self):
+    def _set_s3_connection(self):
         """
         Method to create service client connection to the S3 AWS services.
         Returns:
@@ -378,7 +378,7 @@ class Scraper:
         self.s3_client = boto3.client("s3")
         return self.s3_client
 
-    def save_image_links(self, sub_category_name: str, image_container_xpath: str):
+    def _save_image_links(self, sub_category_name: str, image_container_xpath: str):
         """
         Method to download every product image (jpg format).
 

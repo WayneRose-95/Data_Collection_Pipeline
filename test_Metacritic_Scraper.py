@@ -55,7 +55,7 @@ class MetacriticWebscraperTests(unittest.TestCase):
         for url in test_urls:
             self.scraper.driver.get(url)
             time.sleep(2)
-            test_input = self.scraper.get_information_from_page()
+            test_input = self.scraper._get_information_from_page()
             self.assertIsInstance(test_input, dict)
 
     tracemalloc.reset_peak()
@@ -150,7 +150,7 @@ class MetacriticWebscraperTests(unittest.TestCase):
             print(test_json)
             self.assertTrue(test_json, True)
 
-    @unittest.skip 
+    @unittest.skip
     def test_record_check(self):
 
         # Use a sample record like so
@@ -175,13 +175,15 @@ class MetacriticWebscraperTests(unittest.TestCase):
             "Fighting_Games",
             "link_to_page",
         )
-
+        table_not_present = self.scraper.record_check("Racing_Games", "link_to_page")
         # Testing that the method returns a list
         self.assertIsInstance(sample_record_check, list)
         # Testing if the link exists inside the RDS
         self.assertIn(sample_record["link_to_page"], sample_record_check)
         # Testing if a link does not exist inside the RDS
         self.assertNotIn(racing_link, sample_record_check)
+        # Testing if the method returns an empty list if the table_name is not present within the database
+        self.assertIsInstance(table_not_present, list )
 
     def tearDown(self):
         self.scraper.driver.quit()
