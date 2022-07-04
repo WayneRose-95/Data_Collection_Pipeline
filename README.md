@@ -1,6 +1,9 @@
 # Data_Collection_Pipeline
 An end to end, scalable data-pipeline. Please see the develop branch for the latest version in development.  
 
+![UML Diagram Data Collection](https://user-images.githubusercontent.com/89411656/177179636-8eadff3f-8bed-4251-a29d-ea2b16a9a6c6.jpg)
+
+
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 
 > The first pre-release version of this project has been released. Please see the releases tab 
@@ -128,8 +131,40 @@ This method was used to create a list of hrefs which have already been visited b
 
 This list was then compared with the hrefs collected. If the hrefs collected during the scrape were already inside the RDS, then the page would be skipped. Saving time, and preventing duplicate records. 
 
+
+
 ![image](https://user-images.githubusercontent.com/89411656/176453763-48682e8d-11db-43a0-bc28-fa8e269ed7e8.png)
 
+# Milestone 7 - Docker and Amazon EC2
+
+For this milestone the scraper application was containerised using Docker. 
+
+Running the application within a Docker container allows for simpler development as Docker containers run within their own self-contained environment which can be used on any operating system. 
+
+![image](https://user-images.githubusercontent.com/89411656/177178046-98fc214e-972a-4a2c-8fc7-b2e01df184f2.png)
+
+The above image was built, and it runs locally as shown. 
+
+![image](https://user-images.githubusercontent.com/89411656/177182540-8f67e6ed-1851-4d19-b51e-fd971aa93c43.png)
+
+The image was then pushed to dockerhub as shown below. 
+
+![image](https://user-images.githubusercontent.com/89411656/177184569-beddc882-5081-45ac-af8e-130e9c38cbdb.png)
+
+
+Having completed these steps, an EC2 instance on AWS was spun up to automate the process of running the scraper. 
+
+Docker was installed on the EC2, from which the image could be pulled from DockerHub. 
+
+![image](https://user-images.githubusercontent.com/89411656/177190123-30f72961-5f40-4d53-ad9a-77f6146fa3cd.png)
+
+Here is the same scraper again, but running on an EC2 instance.
+
+![image](https://user-images.githubusercontent.com/89411656/177190365-fb2ccfb9-cd21-44fd-a061-653ebbf4e1a4.png)
+
+
+
+<!-- Milestone 8 - Monitoring  Milestone 9 -- CI/CD -->
 
 
 <!--
