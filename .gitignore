@@ -142,3 +142,6 @@ list_of_fighting_links.txt
 
 # RDS details config file 
 /config/RDS_details_config.yaml
+
+# AWS .pem key for EC2 
+*.pem

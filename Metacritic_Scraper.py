@@ -55,7 +55,7 @@ class MetaCriticScraper(Scraper):
 
     def __init__(self, url):
         super().__init__()
-        with open("config/RDS_details_config.yaml") as file:
+        with open("config/rds_details_config.yaml") as file:
             creds = yaml.safe_load(file)
             DATABASE_TYPE = creds["DATABASE_TYPE"]
             DBAPI = creds["DBAPI"]
@@ -450,3 +450,5 @@ class MetaCriticScraper(Scraper):
 
 if __name__ == "__main__":
     new_scraper = MetaCriticScraper("https://www.metacritic.com")
+    
+    

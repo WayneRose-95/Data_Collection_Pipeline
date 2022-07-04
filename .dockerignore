@@ -1,0 +1,7 @@
+# Ignore these files 
+*.ipynb
+list_of_fighting_links.txt
+genre_list.txt
+test_Metacritic_Scraper.py
+/logs
+__pycache__/
