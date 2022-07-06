@@ -252,6 +252,8 @@ Personally, it highlighted the importance of cloud technology, and why it is so 
 
 # Future Improvements 
 
+- Currently, the code is hard-coded to only accept a specific type of rds_config file. This can be changed to accept any type of file. 
+
 - Greater implementations of OOP principles. e.g. Making the MetacriticScraper class and DataCleaning classes more independent. 
 
 - Addition of a progress bar to give users a window of how long the data collection process will take to finish. 
