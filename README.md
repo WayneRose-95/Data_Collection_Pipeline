@@ -31,6 +31,7 @@ Clone the repository. One method is to run:
 ```
 git clone <link to repo> 
 ``` 
+Where <link to repo> is the url of this repository 
 
 Within the VSCode IDE.
 
@@ -42,6 +43,7 @@ If you are within a conda environment, this can be done by running:
 ```
 conda create --name <env_name> --file requirements.txt
 ```
+Where <env_name> is the name of your environment 
 
 For more information, please follow this ![link](https://frankcorso.dev/setting-up-python-environment-venv-requirements.html)
 
