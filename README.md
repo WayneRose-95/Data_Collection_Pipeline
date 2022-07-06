@@ -24,6 +24,52 @@ An end to end, scalable data-pipeline. Please see the develop branch for the lat
 <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="python" width="40" height="40"/> </a> <a href="https://www.selenium.dev" target="_blank" rel="noreferrer"> 
 <img src="https://raw.githubusercontent.com/detain/svg-logos/780f25886640cef088af994181646db2f6b1a3f8/svg/selenium-logo.svg" alt="selenium" width="40" height="40"/> </a> </p>
 
+# Running the Program 
+
+Clone the repository. One method is to run: 
+
+```
+git clone <link to repo> 
+``` 
+
+Within the VSCode IDE.
+
+
+Create a new environment using the dependencies from requirements.txt
+
+If you are within a conda environment, this can be done by running: 
+
+```
+conda create --name <env_name> --file requirements.txt
+```
+
+For more information, please follow this ![link](https://frankcorso.dev/setting-up-python-environment-venv-requirements.html)
+
+
+Before running the program, within the config directory, please create the following file:
+
+```
+rds_config_details.yml 
+```
+Then, using the template as a guide below, fill in your details to your RDS 
+
+![image](https://user-images.githubusercontent.com/89411656/177586927-c4010bab-6192-4714-b2ab-6167d8fe9d51.png)
+
+Set your .json file name within the main.py script by changing this argument of the method 
+
+![image](https://user-images.githubusercontent.com/89411656/177589595-10fe0f31-dc51-4d1f-9edd-a3d0d02ed1d1.png)
+
+When you are all set, run:  
+
+```
+python main.py
+```
+Within the directory of the github repo folder: Data_Collection_Pipeline. 
+
+Enjoy! 
+
+# Project Log 
+
 ## Milestone 1 - Choosing a Website 
 
 For this project, the website: [metacritic.com](https://www.metacritic.com) was chosen. 
@@ -185,35 +231,40 @@ This program was used to take the metrics collated from Prometheus, and visualis
 ![image](https://user-images.githubusercontent.com/89411656/177565308-d5252bc8-ef7d-4142-9cfe-be23249764b1.png)
 
 
-<!-- Milestone 8 - Monitoring  Milestone 9 -- CI/CD -->
+# Milestone 9 -- CI/CD
+
+In order to allow for easier deployment from build to docker container, a CI-CD Pipeline was set up via Github actions. 
+
+The following yaml file was created. Below is a high level breakdown of the code. 
+
+![Explanation of docker-image yml file](https://user-images.githubusercontent.com/89411656/177583031-00775652-423e-4634-9fb0-8ca5dccd0fe9.jpg)
 
 
-<!--
+# Conclusions 
 
-## Milestone 2
+This project provided a wealth of experience in working with a wide range of technologies. 
+From building to Selenium, to containerising the application with Docker, the full DevOps cycle was employed throughout the project to build and successfully create the data pipeline. 
 
-- Does what you have built in this milestone connect to the previous one? If so explain how. What technologies are used? Why have you used them? Have you run any commands in the terminal? If so insert them using backticks (To get syntax highlighting for code snippets add the language after the first backticks).
+The most interesting section of the project was being able to deploy the completed code onto an EC2 instance, and run it inside a cloud environment. 
+Personally, it highlighted the importance of cloud technology, and why it is so prevalent in today's modern tech stacks. 
 
-- Example below:
+# Future Improvements 
 
-```bash
-/bin/kafka-topics.sh --list --zookeeper 127.0.0.1:2181
-```
+- Greater implementations of OOP principles. e.g. Making the MetacriticScraper class and DataCleaning classes more independent. 
 
-- The above command is used to check whether the topic has been created successfully, once confirmed the API script is edited to send data to the created kafka topic. The docker container has an attached volume which allows editing of files to persist on the container. The result of this is below:
+- Addition of a progress bar to give users a window of how long the data collection process will take to finish. 
 
-```python
-"""Insert your code here"""
-```
+- Adding a column field to scrape the publisher from the website
 
-> Insert screenshot of what you have built working.
+- Currently the code only scrapes from one sub-category of the website; the fighting games section of the site. 
+  Is it possible widen the search area to other portions  of the website?
 
-## Milestone n
+- Customisation of the users' options. i.e. How many records, which subcategory or sub-categories? 
 
-- Continue this process for every milestone, making sure to display clear understanding of each task and the concepts behind them as well as understanding of the technologies used.
+- Expansion of the RDS to facilitate a STAR schema of tables to enhance the scalability of storing the data. 
 
-- Also don't forget to include code snippets and screenshots of the system you are building, it gives proof as well as it being an easy way to evidence your experience!
+- Further utilisation of Amazon S3 to store cleaned data inside a data lake. The data must be time-stamped and updated accordingly.
 
-## Conclusions
+- Could we look at other sections of the website i.e. Music, TV and Movies and scrape from those as well? 
 
-- Maybe write a conclusion to the project, what you understood about it and also how you would improve it or take it further. --> 
+
