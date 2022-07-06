@@ -139,7 +139,7 @@ This list was then compared with the hrefs collected. If the hrefs collected dur
 
 For this milestone the scraper application was containerised using Docker. 
 
-Running the application within a Docker container allows for simpler development as Docker containers run within their own self-contained environment which can be used on any operating system. 
+Running the application within a Docker container allows for simpler development and deployment as Docker containers run within their own self-contained environment which can be used on any operating system. 
 
 ![image](https://user-images.githubusercontent.com/89411656/177178046-98fc214e-972a-4a2c-8fc7-b2e01df184f2.png)
 
@@ -162,6 +162,27 @@ Here is the same scraper again, but running on an EC2 instance.
 
 ![image](https://user-images.githubusercontent.com/89411656/177190365-fb2ccfb9-cd21-44fd-a061-653ebbf4e1a4.png)
 
+# Milestone 8 - Monitoring 
+
+In order to track the underlying metrics of both the EC2 instance and the docker container, the open source monitoring software solution, Prometheus, was used. 
+
+This was done, running: 
+
+```
+docker pull prom/prometheus 
+```
+Inside the the EC2 instance. To run Prometheus from inside a Docker container. 
+This was done to save space within the EC2 instance and for ease of deployment. 
+
+An image showing the status of the docker container, the EC2 instance and the localhost are shown below. 
+
+![image](https://user-images.githubusercontent.com/89411656/177564390-5076678c-c25b-412c-b0c6-265c8c77a428.png)
+
+Grafana is an open source visualisation tool in which users can create operational dashboards to monitor processes of the tech stack. 
+
+This program was used to take the metrics collated from Prometheus, and visualise them in a Grafana dashboard like so: 
+
+![image](https://user-images.githubusercontent.com/89411656/177565308-d5252bc8-ef7d-4142-9cfe-be23249764b1.png)
 
 
 <!-- Milestone 8 - Monitoring  Milestone 9 -- CI/CD -->
