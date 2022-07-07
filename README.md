@@ -230,8 +230,7 @@ Grafana is an open source visualisation tool in which users can create operation
 
 This program was used to take the metrics collated from Prometheus, and visualise them in a Grafana dashboard like so: 
 
-![image](https://user-images.githubusercontent.com/89411656/177565308-d5252bc8-ef7d-4142-9cfe-be23249764b1.png)
-
+![image](https://user-images.githubusercontent.com/89411656/177769054-2fb7e4d7-d090-4f51-bd49-c2bb0a542a12.png)
 
 # Milestone 9 -- CI/CD
 
