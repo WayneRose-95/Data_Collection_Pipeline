@@ -151,7 +151,7 @@ By making edits to the method, and running the test script, the ouptuts of the d
 
 As a result, whenever a new method was added, it would be tested. Overall, this method of test-driven development saved valuable time within development. 
 
-# Milestone 5 - Scalably Storing the Data 
+## Milestone 5 - Scalably Storing the Data 
 
 After completing the scraping process. The raw data was saved inside a .json file. 
 
@@ -166,7 +166,7 @@ As shown in the image above, a config.yaml file was made to securely connect to 
 A snapshot of the database can be found below
 ![image](https://user-images.githubusercontent.com/89411656/176452182-8d8193a9-2618-4568-a5aa-aa4ccca20034.png)
 
-# Milestone 6 - Prevent Rescraping of the same data 
+## Milestone 6 - Prevent Rescraping of the same data 
 
 In order to speed up processing time, and send clean, new records to the database. 
 Logic was placed inside the code to prevent data from the same pages from being rescraped. 
@@ -183,7 +183,7 @@ This list was then compared with the hrefs collected. If the hrefs collected dur
 
 ![image](https://user-images.githubusercontent.com/89411656/176453763-48682e8d-11db-43a0-bc28-fa8e269ed7e8.png)
 
-# Milestone 7 - Docker and Amazon EC2
+## Milestone 7 - Docker and Amazon EC2
 
 For this milestone the scraper application was containerised using Docker. 
 
@@ -210,7 +210,7 @@ Here is the same scraper again, but running on an EC2 instance.
 
 ![image](https://user-images.githubusercontent.com/89411656/177190365-fb2ccfb9-cd21-44fd-a061-653ebbf4e1a4.png)
 
-# Milestone 8 - Monitoring 
+## Milestone 8 - Monitoring 
 
 In order to track the underlying metrics of both the EC2 instance and the docker container, the open source monitoring software solution, Prometheus, was used. 
 
