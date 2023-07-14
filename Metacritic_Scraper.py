@@ -403,7 +403,7 @@ class MetaCriticScraper(Scraper):
         # return the raw_data as a cleaned dataframe
         return raw_data
 
-    def scrape_details(self, file_name: str, json_file_name: str, file_pathway : str, table_name : str):
+    def scrape_details(self, file_name: str, json_file_name: str): # , file_pathway : str, table_name : str
 
         """
         A method which combines all of the previous methods to
@@ -463,7 +463,7 @@ class MetaCriticScraper(Scraper):
                 # But if there is data, save it to the directory.
                 self.save_json(all_data_list, json_file_name)
                 logger.info("Scrape complete! Exiting...")
-                self._clean_dataframe(file_pathway, table_name)
+                # self._clean_dataframe(file_pathway, table_name)
                 self.driver.quit()
 
 if __name__ == "__main__":

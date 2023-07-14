@@ -32,10 +32,11 @@ new_scraper.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
 new_scraper.choose_category("game")
 new_scraper.scrape_details(
     "list_of_fighting_links", 
-    "fighting-games",
-    file_path + '\\json-files\\fighting-games-details.json', 
-    'Fighting_Games' 
+    "fighting-games" 
     )
+
+# ,file_path + '\\json-files\\fighting-games-details.json', 
+#  'Fighting_Games'
 
 # TODO: find a way to make both classes interact with each other within this file.
 # Temporary Solution: Move the methods from data_cleaning.py into Metacritic_Scraper.py 
