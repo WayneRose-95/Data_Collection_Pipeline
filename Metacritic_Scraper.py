@@ -55,20 +55,20 @@ class MetaCriticScraper(Scraper):
 
     def __init__(self, url):
         super().__init__()
-        with open("config/RDS_details_config.yaml") as file:
-            creds = yaml.safe_load(file)
-            DATABASE_TYPE = creds["DATABASE_TYPE"]
-            DBAPI = creds["DBAPI"]
-            ENDPOINT = creds["ENDPOINT"]
-            USER = creds["USER"]
-            PASSWORD = creds["PASSWORD"]
-            DATABASE = creds["DATABASE"]
-            PORT = creds["PORT"]
+        # with open("config/RDS_details_config.yaml") as file:
+        #     creds = yaml.safe_load(file)
+        #     DATABASE_TYPE = creds["DATABASE_TYPE"]
+        #     DBAPI = creds["DBAPI"]
+        #     ENDPOINT = creds["ENDPOINT"]
+        #     USER = creds["USER"]
+        #     PASSWORD = creds["PASSWORD"]
+        #     DATABASE = creds["DATABASE"]
+        #     PORT = creds["PORT"]
 
-        self.engine = create_engine(
-            f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{ENDPOINT}:{PORT}/{DATABASE}"
-        )
-        self.engine.connect()
+        # self.engine = create_engine(
+        #     f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{ENDPOINT}:{PORT}/{DATABASE}"
+        # )
+        # self.engine.connect()
         try:
             self.driver.set_page_load_timeout(30)
             self.land_first_page(url)
@@ -88,6 +88,10 @@ class MetaCriticScraper(Scraper):
             "metacritic_score": '//a[@class="metascore_anchor"]/div',
             "user_score": '//div[@class="userscore_wrap feature_userscore"]/a/div',
             "developer": '//li[@class="summary_detail developer"]/span[2]/a',
+            "publisher": '//*[@id="main"]/div/div[1]/div[1]/div[1]/div[3]/ul/li[1]/span[2]/a',
+            "number_of_players": '//*[@id="main"]/div/div[1]/div[1]/div[3]/div/div/div[2]/div[2]/div[2]/ul/li[3]/span[2]',
+            "rating": './/li[@class="summary_detail product_rating"]',
+            "genre": './/li[@class="summary_detail product_genre"]',
             "description": './/li[@class="summary_detail product_summary"]',
         }
 
@@ -162,7 +166,7 @@ class MetaCriticScraper(Scraper):
         logger.info(f"Here are the list of genres: {list_of_genres}")
         return list_of_genre_links
 
-    def _get_information_from_page(self):
+    def get_information_from_page(self):
         """
         Method to collect the information from the webpage
 
@@ -212,6 +216,20 @@ class MetaCriticScraper(Scraper):
                         ).get_attribute("href")
                         page_information_dict[key] = web_element
 
+                    elif key == "genre" or 'rating':
+                        try:
+                            container = self.driver.find_element(By.XPATH, '//div[@class="details side_details"]')
+
+                            if container:
+                                # look inside the list element 
+                                list_of_genres_or_rating = self.driver.find_element(By.XPATH, xpath)
+
+                                list_of_genres_or_rating.find_element(By.XPATH, '//span[@class="data"]')
+                                page_information_dict[key] = list_of_genres_or_rating.text
+                        
+                        except:
+                            page_information_dict[key] = "No Details"
+                                
                     else:
                         web_element = self.driver.find_element(By.XPATH, xpath)
                         page_information_dict[key] = web_element.text
@@ -410,30 +428,30 @@ class MetaCriticScraper(Scraper):
         with open(f"{file_name}.txt") as file:
 
             all_data_list = []
-            list_of_records = self.record_check("Fighting_Games", "link_to_page")
+            # list_of_records = self.record_check("Fighting_Games", "link_to_page")
             for line in file.read().splitlines():
 
                 try:
 
                     self.driver.implicitly_wait(3)
                     self.driver.get(str(line))
-                    if line in list_of_records:
-                        print("Already scraped")
-                        logger.debug("This record is already within the database")
-                        continue
-                    else:
-                        all_data_list.append(self._get_information_from_page())
+                    # if line in list_of_records:
+                    #     print("Already scraped")
+                    #     logger.debug("This record is already within the database")
+                    #     continue
+                    # else:
+                    all_data_list.append(self.get_information_from_page())
 
                 except TimeoutException:
                     logger.warning("Timeoutexception on this page. Retrying.")
                     self.driver.implicitly_wait(3)
                     self.driver.refresh()
-                    if line in list_of_records:
-                        print("Already scraped")
-                        logger.debug("This record is already within the database")
-                        continue
-                    else:
-                        all_data_list.append(self._get_information_from_page())
+                    # if line in list_of_records:
+                    #     print("Already scraped")
+                    #     logger.debug("This record is already within the database")
+                    #     continue
+                    # else:
+                    all_data_list.append(self.get_information_from_page())
 
             logger.info(all_data_list)
             # Logic to prevent a .json file being created if the list is empty
