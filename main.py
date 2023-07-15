@@ -1,16 +1,23 @@
 from Metacritic_Scraper import MetaCriticScraper
 from data_cleaning import DataCleaning
+from data_cleaning_POC import DatabaseCleaner
+from file_handler import get_absolute_file_path
+from sqlalchemy import create_engine, VARCHAR, TIMESTAMP, INTEGER, BOOLEAN, FLOAT, DATE
+from sqlalchemy.dialects.postgresql import UUID
+from time import time 
+from datetime import datetime 
 import logging
 import os
+
 
 log_filename = "logs/main.log"
 if not os.path.exists(log_filename):
     os.makedirs(os.path.dirname(log_filename), exist_ok=True)
 
-logger = logging.getLogger(__name__)
+main_logger = logging.getLogger(__name__)
 
 # Set the default level as DEBUG
-logger.setLevel(logging.DEBUG)
+main_logger.setLevel(logging.DEBUG)
 
 # Format the logs by time, filename, function_name, level_name and the message
 format = logging.Formatter(
@@ -22,12 +29,24 @@ file_handler = logging.FileHandler(log_filename)
 
 file_handler.setFormatter(format)
 
-logger.addHandler(file_handler)
+main_logger.addHandler(file_handler)
 
-file_path = os.getcwd()
+main_logger.info(f"Beginning process at {datetime.now()}")
 
-    
+############# FILE PATHWAYS ######################
+json_file_pathway = get_absolute_file_path("fighting-games-details.json", "json-files")
+configuration_file_path = get_absolute_file_path("rds_details_local_config.yaml", "config")
+
+start_time = time()
+
+############ MODULE INSTANCES ####################
+cleaner = DatabaseCleaner(
+    configuration_file_path, 
+    "metacritic_database"
+    )
 new_scraper = MetaCriticScraper("https://www.metacritic.com")
+
+############# EXTRACTING DATA FROM WEBSITE ##########
 new_scraper.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
 new_scraper.choose_category("game")
 new_scraper.scrape_details(
@@ -35,9 +54,38 @@ new_scraper.scrape_details(
     "fighting-games" 
     )
 
-# ,file_path + '\\json-files\\fighting-games-details.json', 
-#  'Fighting_Games'
+########## DATA CLEAING PROCESS TO CLEAN DATAFRAME ##############
+raw_dataframe = cleaner.source_data_to_dataframe(json_file_pathway)
 
-# TODO: find a way to make both classes interact with each other within this file.
-# Temporary Solution: Move the methods from data_cleaning.py into Metacritic_Scraper.py 
-# Potential Improvement for TODO still applicable. 
+datastore_table = cleaner.land_games_data(raw_dataframe)
+# Use the dataframe to upload to the datastore under the title "land_fighting_games_data"
+cleaner.upload_to_database(
+    dataframe=datastore_table, 
+    datastore_table_name="land_fighting_games_data", 
+    connection=cleaner.engine, 
+    column_datatypes= {
+                        "uuid": UUID,
+                        "title": VARCHAR(255),
+                        "link_to_page": VARCHAR(255),
+                        "platform": VARCHAR(100),
+                        "release_date": DATE,
+                        "metacritic_score": INTEGER,
+                        "user_score": FLOAT,
+                        "developer": VARCHAR(255),
+                        "publisher": VARCHAR(255),
+                        "number_of_players": VARCHAR(50),
+                        "rating": VARCHAR(10),
+                        "genre": VARCHAR(255),
+                        "description": VARCHAR(8000),
+                        "online_flag": BOOLEAN,
+                        "2D_flag": BOOLEAN,
+                        "3D_flag": BOOLEAN
+                    },
+        )
+
+end_time = time() 
+
+time_elapsed = end_time - start_time
+
+print(f"Time elapsed: {time_elapsed}")
+main_logger.info(f"Time elapsed: {time_elapsed}")

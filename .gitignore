@@ -140,3 +140,6 @@ dmypy.json
 
 # RDS details config file 
 /config/RDS_details_config.yaml
+
+# RDS local details config file 
+/config/RDS_details_local_config.yaml
