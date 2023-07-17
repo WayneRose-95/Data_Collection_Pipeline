@@ -1,114 +1,168 @@
+
 import numpy as np 
 import pandas as pd 
 import os 
-from sqlalchemy import create_engine
-import yaml 
+import yaml
+import logging
+from file_handler import get_absolute_file_path
+from sqlalchemy import create_engine, VARCHAR, INTEGER, BOOLEAN, FLOAT, DATE
+from sqlalchemy.dialects.postgresql import UUID
+from database_connection import DatabaseConnector
 
-# Data Cleaning Plan 
+"""
+LOG CREATION 
+"""
+log_filename = get_absolute_file_path(
+    "data_cleaning.log", "logs"
+)  
+if not os.path.exists(log_filename):
+    os.makedirs(os.path.dirname(log_filename), exist_ok=True)
 
-'''
-1. Read in the .json file 
-2. Set the columns to the correct datatypes 
-3. Use the correct string method for the titles
-4. Clean the Date Field 
+data_cleaning_logger = logging.getLogger(__name__)
 
-'''
+# Set the default level as DEBUG
+data_cleaning_logger.setLevel(logging.DEBUG)
 
-class DataCleaning: 
+# Format the logs by time, filename, function_name, level_name and the message
+format = logging.Formatter(
+    "%(asctime)s:%(filename)s:%(funcName)s:%(levelname)s:%(message)s"
+)
+file_handler = logging.FileHandler(log_filename)
 
-    '''
-    A class which contains methods which extracts .json files. 
-    Files are converted into a Pandas dataframe, from which they are cleaned.
-    Cleaned dataframes are then uploaded to the RDS given in the config file. 
+# Set the formatter to the variable format
 
-    Attributes:
-    self.engine: The connection to the RDS configured via the config file. 
+file_handler.setFormatter(format)
 
-    '''
+data_cleaning_logger.addHandler(file_handler)
 
-    def __init__(self): 
-        with open('config/RDS_details_config.yaml') as file:
-            creds = yaml.safe_load(file)
-            DATABASE_TYPE = creds['DATABASE_TYPE']
-            DBAPI = creds['DBAPI']
-            ENDPOINT = creds['ENDPOINT']
-            USER = creds['USER']
-            PASSWORD = creds['PASSWORD']
-            DATABASE = creds['DATABASE']
-            PORT = creds['PORT']
-        
-        self.engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{ENDPOINT}:{PORT}/{DATABASE}")
+
+class DatabaseCleaner(DatabaseConnector):
+    def __init__(self, config_file : yaml, database_name : str):
+        # Inherit the methods from the DatabaseConnector class 
+        super().__init__()
+        data_cleaning_logger.debug("Creating connection string")
+        connection_string = self.create_connection_string(config_file, True, database_name)
+        data_cleaning_logger("Connection string created")
+        data_cleaning_logger.info(connection_string)
+
+        data_cleaning_logger.debug(f"Initialising database engine using {connection_string}")
+        self.engine = create_engine(
+            connection_string
+            )
+        data_cleaning_logger.debug(f"Attempting to connect to {self.engine}")
         self.engine.connect() 
-    
-    def create_dataframe(self, file_pathway : str, encoding=None):
-        '''
-        Method to create a dataframe and return the data as a dataframe 
+        data_cleaning_logger.info("Connection successful")
 
-        Parameters: 
-        file_pathway:
-        The path to your .json file 
-
-        encoding=None:
-        An optional argument for reading irregular characters. 
-
-        Returns: 
-        raw_data: 
-        The dataframe which has been converted from the .json file. 
-        '''
-        raw_data = pd.read_json(file_pathway, encoding='utf-8-sig')
-        return raw_data
-    
-    def clean_dataframe(self, file_pathway : str, table_name : str):
-        '''
-        Method to clean the dataframe using pandas functions 
-
-        Parameters: 
-        file_pathway:
-        The path to your .json file 
-
-        table_name: 
-        The name of the table that the user can choose for the RDS. 
-        '''
-        # Create the dataframe 
-        raw_data = self.create_dataframe(file_pathway)
-
-        # Create a new column called 'id'
-        raw_data['id'] = raw_data.index 
-
-        # Set this column as the index of the dataframe 
-        raw_data.set_index('id', inplace=True)
-
-        # Convert the following columns into string datatypes 
-        raw_data = raw_data.astype(
-            {
-            'title': 'string', 
-            'link_to_page': 'string', 
-            'platform': 'string',
-            'release_date': 'string',
-            'developer': 'string',  
-            'description': 'string'}
-        )
+    def source_data_to_dataframe(self, file_pathway, encoding='utf-8-sig'):
         
-        # For all values inside the title column, apply the string method .title() to capitalise every first letter. 
-        raw_data.title = raw_data.title.str.title()
+        try:
+            data_cleaning_logger.info(f"Reading in .json into dataframe from {file_pathway}")
+            data_cleaning_logger.debug(f"Using {encoding}")
+            dataframe = pd.read_json(file_pathway, encoding=encoding)
 
-        # Change the column: release_date to a datetime object and change its formatting 
-        raw_data['release_date'] = pd.to_datetime(raw_data['release_date'].astype(str), format='%b %d, %Y')
-        raw_data['release_date'] = raw_data['release_date'].dt.strftime('%m/%d/%Y')
+            return dataframe 
 
-        # Next, change the columns: metacritic_score and user_score to an integer and a float respectively. 
-        raw_data.metacritic_score = pd.to_numeric(raw_data.metacritic_score, errors='coerce').astype('Int64')
-        raw_data.user_score = pd.to_numeric(raw_data.user_score, errors='coerce').astype('float64')
+        except ValueError:
+            data_cleaning_logger.exception("Error reading in the dataframe. Please check file pathway")
+            print("Please check file pathway")
 
-        # Lastly, for each column in the description column, strip the word 'Summary:' off of each of the records. 
-        raw_data.description = raw_data.description.str.strip('Summary:')
-        raw_data.head()
-        # Send the data to the RDS. If the table already exists, replace it. 
-        raw_data.to_sql(table_name, con=self.engine, if_exists='replace')
-        # return the raw_data as a cleaned dataframe
-        return raw_data
+    def land_games_data(self, games_df : pd.DataFrame):
+        
+        # Stripping off the first characters of the strings using regex patterns 
+        games_df['description'] = games_df['description'].str.replace(r'^(Summary):\s', '', regex=True)
+        games_df['genre'] = games_df['genre'].str.replace(r'^Genre\(s\):\s', '', regex=True)
+        games_df['rating'] = games_df['rating'].str.replace(r'^(Rating):\s', '', regex=True)
+
+        # Replacing 'Null' or 'No Details' with np.nan values 
+
+        games_df["developer"] = games_df["developer"].replace('No Details', np.nan)
+        games_df["developer"] = games_df["developer"].replace('No Details', np.nan)
+        games_df["metacritic_score"] = games_df["metacritic_score"].replace('tbd', np.nan)
+        games_df["user_score"] = games_df["user_score"].replace('tbd', np.nan)
+        games_df["number_of_players"] = games_df["number_of_players"].replace("No Details", np.nan)
+        games_df["number_of_players"] = games_df["number_of_players"].replace("On GameFAQs", np.nan).replace('', np.nan)
+
+        games_df["release_date"] = pd.to_datetime(games_df["release_date"])
+
+        # ========= COLUMN ADDITIONS  =======================
+
+        # Adding online_flag column to disinguish between online games 
+        games_df['online_flag'] = games_df['number_of_players'].str.contains('Online', na=False)
+
+        # Set 'online_flag' to False for 'No Online Multiplayer'
+        games_df.loc[games_df['number_of_players'] == 'No Online Multiplayer', 'online_flag'] = False
+        
+        # Creating '2D_flag' column if the genre column for the record has '2D' in it 
+        games_df['2D_flag'] = games_df['genre'].str.contains('2D')
+
+        # Create '3D Flag' column
+        games_df['3D_flag'] = games_df['genre'].str.contains('3D')
+
+        return games_df
+
+    def upload_to_database(
+            self, 
+            dataframe : pd.DataFrame, 
+            datastore_table_name : str, 
+            connection, 
+            column_datatypes,
+            table_condition="replace"
+            ):
+        
+        try:
+            data_cleaning_logger.debug("Attempting to upload {datastore_table_name} to database")
+            data_cleaning_logger.debug(f"Using {connection}")
+            dataframe.to_sql(
+                datastore_table_name, 
+                con=connection, 
+                if_exists=table_condition, 
+                dtype=column_datatypes
+                )
+            print(f"{datastore_table_name} uploaded to database")
+            data_cleaning_logger.info(f"{datastore_table_name} uploaded to database")
+        except:
+            data_cleaning_logger.debug(f"{datastore_table_name} uploaded to database")
+            print("Error uploading table to the database")
+            raise Exception
 
 if __name__ == "__main__":
-    file_path = os.getcwd()
-    new_data = DataCleaning()
-    new_data.clean_dataframe(file_path + '\\json-files\\fighting-games-details.json', 'Fighting_Games')
+    # Get the file pathway for the .json file 
+    json_file_pathway = get_absolute_file_path("fighting-games-details.json", "json-files")
+    config_file_path = get_absolute_file_path("rds_details_local_config.yaml", "config")
+    # Instantiate an instance of the DatabaseCleaner class 
+    cleaner = DatabaseCleaner(config_file_path, 'metacritic_database')
+    # Read the table into a dataframe 
+    raw_dataframe = cleaner.source_data_to_dataframe(json_file_pathway)
+
+    datastore_table = cleaner.land_games_data(raw_dataframe)
+    # Use the dataframe to upload to the datastore under the title "land_fighting_games_data"
+    cleaner.upload_to_database(
+        dataframe=datastore_table, 
+        datastore_table_name="land_fighting_games_data", 
+        connection=cleaner.engine, 
+        column_datatypes= {
+                            "uuid": UUID,
+                            "title": VARCHAR(255),
+                            "link_to_page": VARCHAR(255),
+                            "platform": VARCHAR(100),
+                            "release_date": DATE,
+                            "metacritic_score": INTEGER,
+                            "user_score": FLOAT,
+                            "developer": VARCHAR(255),
+                            "publisher": VARCHAR(255),
+                            "number_of_players": VARCHAR(50),
+                            "rating": VARCHAR(10),
+                            "genre": VARCHAR(255),
+                            "description": VARCHAR(8000),
+                            "online_flag": BOOLEAN,
+                            "2D_flag": BOOLEAN,
+                            "3D_flag": BOOLEAN
+                        },
+        )
+
+
+
+
+
+
+

@@ -1,8 +1,7 @@
 from Metacritic_Scraper import MetaCriticScraper
-from data_cleaning import DataCleaning
-from data_cleaning_POC import DatabaseCleaner
+from data_cleaning import DatabaseCleaner
 from file_handler import get_absolute_file_path
-from sqlalchemy import create_engine, VARCHAR, TIMESTAMP, INTEGER, BOOLEAN, FLOAT, DATE
+from sqlalchemy import  VARCHAR, INTEGER, BOOLEAN, FLOAT, DATE
 from sqlalchemy.dialects.postgresql import UUID
 from time import time 
 from datetime import datetime 
@@ -34,8 +33,13 @@ main_logger.addHandler(file_handler)
 main_logger.info(f"Beginning process at {datetime.now()}")
 
 ############# FILE PATHWAYS ######################
-json_file_pathway = get_absolute_file_path("fighting-games-details.json", "json-files")
+main_logger.info(f"Searching for file pathways to configuration and source data")
+
 configuration_file_path = get_absolute_file_path("rds_details_local_config.yaml", "config")
+
+
+main_logger.info(f"Path to configuration file {configuration_file_path}")
+
 
 start_time = time()
 
@@ -47,14 +51,20 @@ cleaner = DatabaseCleaner(
 new_scraper = MetaCriticScraper("https://www.metacritic.com")
 
 ############# EXTRACTING DATA FROM WEBSITE ##########
+main_logger.info("Beginning Source Data Extraction")
 new_scraper.accept_cookies('//button[@id="onetrust-accept-btn-handler"]')
 new_scraper.choose_category("game")
 new_scraper.scrape_details(
     "list_of_fighting_links", 
     "fighting-games" 
     )
+main_logger.info("Beginning Source Data Extraction")
+
 
 ########## DATA CLEAING PROCESS TO CLEAN DATAFRAME ##############
+json_file_pathway = get_absolute_file_path("fighting-games-details.json", "json-files")
+main_logger.info(f"Path to source data: {json_file_pathway}")
+
 raw_dataframe = cleaner.source_data_to_dataframe(json_file_pathway)
 
 datastore_table = cleaner.land_games_data(raw_dataframe)
